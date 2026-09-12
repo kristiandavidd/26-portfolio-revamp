@@ -1,0 +1,36 @@
+@import "tailwindcss";
+@import "lenis/dist/lenis.css";
+
+@theme {
+  /* Base palette */
+  --color-white: #ffffff;
+  --color-black: #0a0a0a;
+  --color-orange: #ff5c1a;
+  --color-orange-dark: #e04a0d;
+
+  /* Neutrals for text and dividers */
+  --color-muted: #6b6b6b;
+  --color-line: #e6e6e6;
+
+  /* Typography */
+  --font-sans: var(--font-jakarta);
+  --font-mono: var(--font-jetbrains-mono);
+  --font-display: var(--font-sedgwick-ave-display);
+}
+
+@layer base {
+  html,
+  body {
+    background-color: var(--color-white);
+    color: var(--color-black);
+  }
+
+  body {
+    overflow-x: clip;
+  }
+
+  ::selection {
+    background-color: var(--color-orange);
+    color: var(--color-white);
+  }
+}
