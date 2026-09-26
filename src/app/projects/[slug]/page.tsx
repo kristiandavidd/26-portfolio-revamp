@@ -26,6 +26,13 @@ export async function generateMetadata({
   return {
     title: `${project.name} · ${profile.name}`,
     description: project.blurb,
+    // Set per case: metadata is merged shallowly, so a page that defines
+    // openGraph replaces the layout's wholesale rather than adding to it.
+    openGraph: {
+      title: `${project.name} · ${profile.name}`,
+      description: project.blurb,
+      url: `/projects/${project.slug}`,
+    },
   };
 }
 

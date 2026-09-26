@@ -16,13 +16,22 @@ import {
   User,
   type LucideIcon,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
- * Both personalities point at the same five anchors, so the nav can travel
- * between them unchanged. What changes is the mark on each one: the warm side
- * gets its own set rather than a recoloured technical one, because a different
- * personality should not be saying the same things in the same voice.
+ * The five anchors the dock offers, in the order they appear on the page. Both
+ * personalities point at the same five, so the nav can travel between them
+ * unchanged. What changes is the mark on each one: the warm side gets its own
+ * set rather than a recoloured technical one, because a different personality
+ * should not be saying the same things in the same voice.
+ *
+ * Dephilia and Community are deliberately not here: they belong to a listed
+ * anchor rather than standing on their own. Dephilia is part of the work, so it
+ * reads as Projects, and Community sits with the credentials, so it reads as
+ * Certifications. That falls out of the rule below on its own — the highlight is
+ * whichever listed anchor was passed last — so no section needs an entry just to
+ * keep the dock honest. Adding one would also add a second place to keep in step
+ * with the page order.
  */
 const SECTIONS: {
   id: string;
@@ -69,20 +78,36 @@ export function BottomNav() {
   const [active, setActive] = useState(SECTIONS[0].id);
   const activeRef = useRef(SECTIONS[0].id);
 
-  const lenis = useLenis(() => {
-    const line = window.innerHeight * ACTIVE_LINE;
-    let current = SECTIONS[0].id;
-    for (const section of SECTIONS) {
-      const el = document.getElementById(section.id);
-      if (!el) continue;
-      if (el.getBoundingClientRect().top <= line) {
-        current = section.id;
+  const lenis = useLenis();
+
+  // The dock answers the page on the window's own scroll event rather than
+  // through the smooth-scroll controller's callback: the controller is one more
+  // thing that can be paused, replaced or busy, and the dock has to be right
+  // either way. Nothing here writes to a section, so the reads cannot feed back
+  // into a layout loop.
+  useEffect(() => {
+    const measure = () => {
+      const line = window.innerHeight * ACTIVE_LINE;
+      let current = SECTIONS[0].id;
+
+      for (const section of SECTIONS) {
+        const el = document.getElementById(section.id);
+        if (!el) continue;
+        if (el.getBoundingClientRect().top <= line) current = section.id;
       }
-    }
-    if (current !== activeRef.current) {
+
+      if (current === activeRef.current) return;
       activeRef.current = current;
       setActive(current);
-    }
+    };
+
+    measure();
+    window.addEventListener("scroll", measure, { passive: true });
+    window.addEventListener("resize", measure);
+    return () => {
+      window.removeEventListener("scroll", measure);
+      window.removeEventListener("resize", measure);
+    };
   }, []);
 
   const scrollTo = (id: string) => {

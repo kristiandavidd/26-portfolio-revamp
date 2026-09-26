@@ -154,22 +154,19 @@ export function ProjectHero({
         className="relative z-20"
       >
         <Container>
-          <span
-            className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl"
-            style={{
-              backgroundColor: `color-mix(in srgb, ${accent} 18%, transparent)`,
-            }}
-          >
+          {/* The client's mark, supplied as full-bleed artwork: no frame and no
+              padding, only rounded corners. */}
+          <span className="relative block h-12 w-12 shrink-0 overflow-hidden rounded-2xl">
             {project.logo ? (
               <Image
                 src={project.logo}
                 alt=""
                 fill
-                sizes="44px"
-                className="object-contain p-2"
+                sizes="48px"
+                className="object-cover"
               />
             ) : (
-              <span className="font-mono text-[11px] tracking-wide text-white/80">
+              <span className="flex h-full w-full items-center justify-center bg-white/10 font-mono text-[11px] tracking-wide text-white/80">
                 {monogram(project.name)}
               </span>
             )}

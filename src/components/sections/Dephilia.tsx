@@ -268,7 +268,7 @@ export function Dephilia() {
             align="center"
             width="wide"
             title="Built at Dephilia"
-            description={`${dephilia.description} Five products have come out of it — three pieces of shared infrastructure the client work runs on, and two marketplaces.`}
+            description={`${dephilia.description} Five products have come out of it: three pieces of shared infrastructure the client work runs on, and two marketplaces.`}
           >
             {/* The seat I sit in belongs to the studio rather than to any one
                 product, so it reads directly under the name. The legal entity

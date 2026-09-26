@@ -254,7 +254,7 @@ function ProjectScene({ project, index }: { project: Project; index: number }) {
             >
               <Link
                 href={`/projects/${project.slug}`}
-                aria-label={`${project.name} — read the case`}
+                aria-label={`${project.name}: read the case`}
                 className="relative block"
               >
                 {project.background ? (
@@ -355,7 +355,7 @@ export function Projects() {
       <Container className="relative pt-20 sm:pt-28">
         <SectionHeader
           title="Shipped, not demoed"
-          description="Nine systems built end to end — loyalty, ticketing, tournaments, messaging, IoT. Nothing here was a demo."
+          description="Nine systems built end to end: loyalty, ticketing, tournaments, messaging, IoT. Nothing here was a demo."
           tone="dark"
         />
       </Container>

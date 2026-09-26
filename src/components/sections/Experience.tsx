@@ -4,22 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import {
   motion,
+  useInView,
   useMotionValueEvent,
   useScroll,
   useTransform,
 } from "framer-motion";
 import { Container } from "@/components/ui/Container";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { experience } from "@/data/profile";
-
-function monogram(company: string) {
-  return company
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((word) => word.charAt(0))
-    .join("")
-    .toUpperCase();
-}
+import { experience, type ExperienceItem } from "@/data/profile";
 
 const LAST = experience.length - 1;
 
@@ -30,6 +22,103 @@ function readTranslateX(element: HTMLElement) {
   const transform = getComputedStyle(element).transform;
   if (!transform || transform === "none") return 0;
   return new DOMMatrixReadOnly(transform).m41;
+}
+
+/**
+ * One panel: the client's mark, the company, the role, and what was done there.
+ *
+ * Which panel is "current" is answered two ways, because the section behaves two
+ * ways. Along the rail the panels are laid out sideways and share every row, so
+ * visibility cannot tell them apart — the scrubbed progress does, and it is
+ * passed in. Stacked on a phone each panel has a band of the page to itself, so
+ * it answers for itself.
+ *
+ * The panel in hand takes a wash of accent; the rest sit back at a third of
+ * their weight, so the section reads as one company at a time instead of three
+ * at once.
+ */
+function Panel({
+  item,
+  index,
+  scrubbing,
+  active,
+}: {
+  item: ExperienceItem;
+  index: number;
+  scrubbing: boolean;
+  active: number;
+}) {
+  const ref = useRef<HTMLElement>(null);
+  const inView = useInView(ref, { margin: "-45% 0px -45% 0px" });
+  const lit = scrubbing ? index === active : inView;
+
+  return (
+    <article
+      ref={ref}
+      className={`relative rounded-3xl p-5 transition-opacity duration-500 sm:p-7 lg:w-[52vw] lg:shrink-0 lg:snap-start ${
+        lit ? "opacity-100" : "opacity-35"
+      }`}
+    >
+      {/* The wash marks the panel in hand. It is sized to the panel's own padding
+          box rather than run to the section edge, so the block has room around the
+          words and rounded corners; hard against the edge it read as a stray
+          rectangle instead of a light. */}
+      <span
+        aria-hidden
+        className={`pointer-events-none absolute inset-0 rounded-3xl bg-gradient-to-r from-orange/10 to-transparent transition-opacity duration-500 ${
+          lit ? "opacity-100" : "opacity-0"
+        }`}
+      />
+
+      <div className="relative flex items-start gap-4 sm:gap-6">
+        {/* No frame and no padding: these marks are supplied as full-bleed
+            artwork, so the tile only rounds the corners. */}
+        <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl sm:h-20 sm:w-20">
+          {item.logo ? (
+            <Image
+              src={item.logo}
+              alt={`${item.company} logo`}
+              fill
+              sizes="80px"
+              className="object-cover"
+            />
+          ) : null}
+        </div>
+
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            {item.current ? (
+              <span className="rounded-full border border-orange/40 bg-orange/10 px-2.5 py-0.5 font-mono text-[11px] tracking-wide text-orange uppercase">
+                Current
+              </span>
+            ) : null}
+            <span className="font-mono text-xs text-white/40">
+              {item.period}
+            </span>
+          </div>
+
+          <h3 className="mt-3 text-3xl text-balance text-white sm:text-4xl lg:text-5xl font-display tracking-widest uppercase">
+            {item.company}
+          </h3>
+          <p className="mt-2 text-base text-orange sm:text-lg">{item.role}</p>
+        </div>
+      </div>
+
+      <ul className="relative mt-8 space-y-3.5 sm:mt-10">
+        {item.highlights.map((highlight) => (
+          <li key={highlight} className="flex gap-3">
+            <span
+              aria-hidden
+              className="mt-2 h-1 w-1 shrink-0 rounded-full bg-orange/70"
+            />
+            <span className="text-sm leading-relaxed text-white/60">
+              {highlight}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </article>
+  );
 }
 
 export function Experience() {
@@ -147,79 +236,27 @@ export function Experience() {
           className="lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:justify-between lg:overflow-hidden lg:py-16"
         >
           <Container>
-            <SectionHeader title="Where the work happened" tone="dark" />
+            <SectionHeader
+              title="Where the work happened"
+              description="Companies behind the journey."
+              tone="dark"
+            />
           </Container>
 
           <Container className="mt-12 lg:mt-0 lg:flex lg:flex-1 lg:items-center">
             <motion.div
               ref={railRef}
               style={{ x }}
-              className="flex flex-col gap-12 lg:w-max lg:flex-row lg:gap-0"
+              className="flex flex-col gap-2 lg:w-max lg:flex-row lg:gap-0"
             >
-              {experience.map((item) => (
-                <article
+              {experience.map((item, index) => (
+                <Panel
                   key={item.company}
-                  className="relative lg:w-[52vw] lg:shrink-0 lg:snap-start lg:border-l lg:border-white/10 lg:px-10 lg:first:border-l-0 lg:first:pl-0 "
-                >
-                  <span
-                    aria-hidden
-                    className="pointer-events-none absolute -top-6 right-0 font-display text-[6rem] leading-none font-semibold text-white/[0.05] select-none lg:-top-16 lg:text-[11rem]"
-                  >
-                    {monogram(item.company)}
-                  </span>
-
-                  <div className="relative flex items-start gap-4 sm:gap-6">
-                    <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-white/5 sm:h-20 sm:w-20">
-                      {item.logo ? (
-                        <Image
-                          src={item.logo}
-                          alt={`${item.company} logo`}
-                          fill
-                          sizes="80px"
-                          className="object-contain p-2 sm:p-3.5"
-                        />
-                      ) : (
-                        <span className="text-lg font-semibold tracking-wide text-white/80 sm:text-2xl">
-                          {monogram(item.company)}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                        {item.current ? (
-                          <span className="rounded-full border border-orange/40 bg-orange/10 px-2.5 py-0.5 font-mono text-[11px] tracking-wide text-orange uppercase">
-                            Current
-                          </span>
-                        ) : null}
-                        <span className="font-mono text-xs text-white/40">
-                          {item.period}
-                        </span>
-                      </div>
-
-                      <h3 className="mt-3 text-3xl text-balance text-white sm:text-4xl lg:text-5xl font-display tracking-widest uppercase">
-                        {item.company}
-                      </h3>
-                      <p className="mt-2 text-base text-orange sm:text-lg">
-                        {item.role}
-                      </p>
-                    </div>
-                  </div>
-
-                  <ul className="relative mt-8 space-y-3.5 sm:mt-10">
-                    {item.highlights.map((highlight) => (
-                      <li key={highlight} className="flex gap-3">
-                        <span
-                          aria-hidden
-                          className="mt-2 h-1 w-1 shrink-0 rounded-full bg-orange/70"
-                        />
-                        <span className="text-sm leading-relaxed text-white/60">
-                          {highlight}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </article>
+                  item={item}
+                  index={index}
+                  scrubbing={scrubbing}
+                  active={active}
+                />
               ))}
             </motion.div>
           </Container>

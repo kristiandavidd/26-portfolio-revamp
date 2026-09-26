@@ -31,7 +31,11 @@ export type ExperienceItem = {
 export type Project = {
   slug: string;
   name: string;
-  /** Optional path under /public, e.g. "/images/logo-loyalty.png". Falls back to a monogram. */
+  /**
+   * Optional path under /public for the mark shown beside the case — the
+   * client's, since a project does not have a logo of its own. Falls back to a
+   * monogram of the project name.
+   */
   logo?: string;
   /**
    * Optional path under /public for the background layer of the frame. 4:3, so
@@ -132,7 +136,7 @@ export const profile: Profile = {
   role: "",
   location: "Semarang, Indonesia",
   email: "kristiandavid@dephilia.com",
-  bio: "I'm a fullstack software engineer based in Semarang, Indonesia. I build web products end to end, from the Laravel and Next.js services behind the scenes to the React interfaces people actually use. That has meant SaaS platforms, loyalty systems, and IoT dashboards serving thousands of users.",
+  bio: "Being a software engineer here has meant following problems wherever they show up, then building the cleanest answer possible. That habit led to a variety of projects across web, mobile, and beyond, each with its own vibe. Let’s dive into those chapters and what was solved in each one.",
   socials: [
     { label: "Instagram", url: "https://www.instagram.com/kristiandavidd/" },
     { label: "LinkedIn", url: "https://linkedin.com/in/kristiandavidd/" },
@@ -145,6 +149,7 @@ export const skills: SkillGroup[] = [];
 export const experience: ExperienceItem[] = [
   {
     company: "NEXA",
+    logo: "/images/company/nexa.png",
     role: "Fullstack Web Developer",
     period: "Jun 2025 – Present",
     current: true,
@@ -157,6 +162,7 @@ export const experience: ExperienceItem[] = [
   },
   {
     company: "Dephilia Solution",
+    logo: "/images/company/dephilia.png",
     role: "Software Engineer",
     period: "Apr 2023 – Jun 2025",
     current: false,
@@ -168,6 +174,7 @@ export const experience: ExperienceItem[] = [
   },
   {
     company: "Swiftlead Indonesia",
+    logo: "/images/company/swiftlead.png",
     role: "Fullstack Developer",
     period: "Dec 2023 – Feb 2025",
     current: false,
@@ -187,13 +194,14 @@ export const projects: Project[] = [
   {
     slug: "foryou",
     name: "ForYou",
+    logo: "/images/company/nexa.png",
     background: "/images/projects/foryou-1.webp",
     foreground: "/images/projects/foryou-2.webp",
     sectionBackground: "/images/projects/bg-foryou.webp",
     blurb:
       "The internal CMS behind Sinar Mas Land's loyalty and rewards programme.",
     summary:
-      "ForYou is a loyalty and rewards application built by Sinar Mas Land to drive customer engagement across its retail ecosystem. I developed and maintained the internal CMS that operations teams use to run it — campaign content, redeemable rewards, user segments and reporting dashboards.",
+      "ForYou is a loyalty and rewards application built by Sinar Mas Land to drive customer engagement across its retail ecosystem. I developed and maintained the internal CMS that operations teams use to run it: campaign content, redeemable rewards, user segments and reporting dashboards.",
     company: "Nexa",
     role: "Web Developer",
     tags: ["Laravel", "MySQL"],
@@ -216,6 +224,7 @@ export const projects: Project[] = [
   {
     slug: "nexa-padel-tournament",
     name: "Nexa Corporate Padel Tournament",
+    logo: "/images/company/nexa.png",
     background: "/images/projects/padel-1.webp",
     foreground: "/images/projects/padel-2.webp",
     sectionBackground: "/images/projects/bg-padel.webp",
@@ -242,6 +251,7 @@ export const projects: Project[] = [
   {
     slug: "home-of-sound",
     name: "Home of Sound",
+    logo: "/images/company/nexa.png",
     background: "/images/projects/hos-1.webp",
     foreground: "/images/projects/hos-2.webp",
     sectionBackground: "/images/projects/bg-hos.webp",
@@ -268,6 +278,7 @@ export const projects: Project[] = [
   {
     slug: "nexatiket",
     name: "NexaTiket",
+    logo: "/images/company/nexa.png",
     background: "/images/projects/nexatiket-1.webp",
     foreground: "/images/projects/nexatiket-2.webp",
     sectionBackground: "/images/projects/bg-nexatiket.webp",
@@ -295,6 +306,7 @@ export const projects: Project[] = [
   {
     slug: "findpix",
     name: "FindPix",
+    logo: "/images/company/nexa.png",
     background: "/images/projects/findpix-1.webp",
     foreground: "/images/projects/findpix-2.webp",
     sectionBackground: "/images/projects/bg-findpix.webp",
@@ -320,6 +332,7 @@ export const projects: Project[] = [
   {
     slug: "nexa-messenger",
     name: "Nexa Messenger",
+    logo: "/images/company/nexa.png",
     background: "/images/projects/messenger-1.webp",
     foreground: "/images/projects/messenger-2.webp",
     sectionBackground: "/images/projects/bg-messenger.webp",
@@ -352,6 +365,7 @@ export const projects: Project[] = [
   {
     slug: "semarang-great-sale",
     name: "Semarang Great Sale",
+    logo: "/images/company/nexa.png",
     company: "Nexa",
     background: "/images/projects/semargres-1.webp",
     foreground: "/images/projects/semargres-2.webp",
@@ -380,6 +394,7 @@ export const projects: Project[] = [
   {
     slug: "swiftlead",
     name: "Swiftlead",
+    logo: "/images/company/swiftlead.png",
     background: "/images/projects/swiftlead-1.webp",
     foreground: "/images/projects/swiftlead-2.webp",
     sectionBackground: "/images/projects/bg-swiftlead.webp",
@@ -408,6 +423,7 @@ export const projects: Project[] = [
   {
     slug: "sea-design",
     name: "Sea Design",
+    logo: "/images/company/sea.png",
     background: "/images/projects/sea-1.webp",
     foreground: "/images/projects/sea-2.webp",
     sectionBackground: "/images/projects/bg-sea.webp",
@@ -437,7 +453,7 @@ export const dephilia = {
   // Confirm the domain before shipping.
   url: "https://dephilia.com",
   description:
-    "A product studio I founded to turn real business challenges into practical digital solutions. From custom websites and business systems to applications and AI-powered solutions, the work is built around how businesses actually operate.",
+    "Every great product starts with an idea. Dephilia helps turn those ideas into digital products that solve real problems, create better experiences, and give businesses room to grow.",
 };
 
 // Dephilia's own products: shared infrastructure the studio's client work runs
