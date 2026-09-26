@@ -8,11 +8,9 @@ import {
   BookOpen,
   Briefcase,
   Brush,
-  Feather,
   FolderKanban,
   Heart,
   Home,
-  Mail,
   Sprout,
   Sun,
   User,
@@ -21,7 +19,7 @@ import {
 import { useRef, useState } from "react";
 
 /**
- * Both personalities point at the same six anchors, so the nav can travel
+ * Both personalities point at the same five anchors, so the nav can travel
  * between them unchanged. What changes is the mark on each one: the warm side
  * gets its own set rather than a recoloured technical one, because a different
  * personality should not be saying the same things in the same voice.
@@ -34,15 +32,24 @@ const SECTIONS: {
 }[] = [
   { id: "hero", label: "Home", technical: Home, personal: Sun },
   { id: "about", label: "About", technical: User, personal: Heart },
-  { id: "experience", label: "Experience", technical: Briefcase, personal: Sprout },
-  { id: "projects", label: "Projects", technical: FolderKanban, personal: Brush },
+  {
+    id: "experience",
+    label: "Experience",
+    technical: Briefcase,
+    personal: Sprout,
+  },
+  {
+    id: "projects",
+    label: "Projects",
+    technical: FolderKanban,
+    personal: Brush,
+  },
   {
     id: "certifications",
     label: "Certifications",
     technical: Award,
     personal: BookOpen,
   },
-  { id: "contact", label: "Contact", technical: Mail, personal: Feather },
 ];
 
 // Fraction down the viewport that counts as the "active line". A section

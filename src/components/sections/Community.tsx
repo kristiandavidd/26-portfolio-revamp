@@ -1,27 +1,65 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useReducedMotion, useScroll } from "framer-motion";
+import {
+  motion,
+  useReducedMotion,
+  useScroll,
+  type MotionProps,
+  type Variants,
+} from "framer-motion";
+import { Brain, Cloud, Flame, Layers, type LucideIcon } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { community } from "@/data/profile";
+import { community, type CommunityIcon } from "@/data/profile";
 import { useDepthY } from "@/components/ui/depth";
 
-// The source notes list three of these as the same programme in three
-// consecutive years, so the years are grouped instead of being given a row each.
-// The streak is the story, and one row per year would hide it behind repetition.
-const PROGRAMMES = community.reduce<{ programme: string; years: string[] }[]>(
-  (acc, entry) => {
-    const found = acc.find((item) => item.programme === entry.programme);
-    if (found) found.years.push(entry.period);
-    else acc.push({ programme: entry.programme, years: [entry.period] });
-    return acc;
-  },
-  []
-);
+const ICONS: Record<CommunityIcon, LucideIcon> = {
+  cloud: Cloud,
+  brain: Brain,
+  layers: Layers,
+  flame: Flame,
+};
 
-const ROLE = community[0]?.role ?? "Facilitator";
-const YEARS = [...new Set(community.map((entry) => entry.period))].sort();
+const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
+
+// A row assembles rather than fades in: the rule above it draws across, the mark
+// lands with a touch of spring, the programme lifts out of its own box, and the
+// result slides in from the right. Every piece is a transform or an opacity, so
+// nothing here forces the browser to repaint a row while the page is moving.
+const row: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.07, delayChildren: 0.04 } },
+};
+
+const rule: Variants = {
+  hidden: { scaleX: 0 },
+  show: { scaleX: 1, transition: { duration: 0.7, ease: EASE } },
+};
+
+const mark: Variants = {
+  hidden: { scale: 0.5, opacity: 0 },
+  show: {
+    scale: 1,
+    opacity: 1,
+    transition: { type: "spring", stiffness: 320, damping: 24 },
+  },
+};
+
+const programme: Variants = {
+  hidden: { y: "115%" },
+  show: { y: "0%", transition: { duration: 0.65, ease: EASE } },
+};
+
+const meta: Variants = {
+  hidden: { opacity: 0, y: 8 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } },
+};
+
+const result: Variants = {
+  hidden: { opacity: 0, x: 20 },
+  show: { opacity: 1, x: 0, transition: { duration: 0.6, ease: EASE } },
+};
 
 export function Community() {
   const ref = useRef<HTMLElement>(null);
@@ -32,11 +70,17 @@ export function Community() {
     offset: ["start end", "end start"],
   });
 
-  // Three planes, same ladder as every other section: the backdrop word barely
-  // moves, the role sits on the subject plane, the list runs ahead of it.
-  const backdropY = useDepthY(scrollYProgress, "atmosphere", 260);
-  const roleY = useDepthY(scrollYProgress, "subject", 170);
-  const listY = useDepthY(scrollYProgress, "foreground", 170);
+  const runY = useDepthY(scrollYProgress, "subject", 55);
+
+  // Reduced motion is handed the finished state outright — no motion props, so
+  // every row simply renders where it belongs.
+  const reveal: MotionProps = still
+    ? {}
+    : {
+        initial: "hidden",
+        whileInView: "show",
+        viewport: { once: true, margin: "-12% 0px -12% 0px" },
+      };
 
   if (community.length === 0) return null;
 
@@ -46,59 +90,104 @@ export function Community() {
       id="community"
       className="relative scroll-mt-24 overflow-x-clip bg-white"
     >
-      <motion.span
-        aria-hidden
-        style={still ? undefined : { y: backdropY }}
-        className="font-display pointer-events-none absolute inset-x-0 top-[34%] text-center text-[17vw] leading-none whitespace-nowrap text-black/[0.035] uppercase select-none"
-      >
-        Community
-      </motion.span>
-
-      <Container className="relative pb-20 sm:pb-28">
+      <Container className="relative pt-20 pb-20 sm:pt-28 sm:pb-28">
         <SectionHeader
           title="Passing it on"
-          description="Programmes I've helped run, and the years I kept coming back to them."
+          description="The work doesn't stop at the screen. Teaching, running sessions, and helping people get to grips with the tools I use every day."
         />
 
-        <div className="mt-16 grid gap-12 sm:mt-24 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] sm:items-start sm:gap-20">
-          {/* The role leads rather than the programme names. All four entries
-              carry the same one, so it is the thing here actually worth setting
-              in display type. */}
-          <motion.div style={still ? undefined : { y: roleY }}>
-            <h3 className="font-display text-[clamp(2.75rem,9vw,5.5rem)] leading-[0.9] text-black uppercase">
-              {ROLE}
-            </h3>
-            <p className="mt-5 font-mono text-[11px] tracking-[0.22em] text-black/45 uppercase">
-              {community.length} engagements · {YEARS.join(" · ")}
-            </p>
-          </motion.div>
+        {/* Four engagements, each told on its own terms. Deliberately not grouped
+            by programme or laid out on a timeline: the three Arcade years are one
+            repeated programme, and folding them together made the section read
+            as a table about dates instead of four separate results.
 
-          <motion.ul
-            style={still ? undefined : { y: listY }}
-            className="flex flex-col gap-10"
-          >
-            {PROGRAMMES.map((item) => (
-              <li key={item.programme}>
-                <p className="font-display text-[1.5rem] leading-[1.05] text-black uppercase sm:text-[2rem]">
-                  {item.programme}
-                </p>
+            The programme carries the weight and the role takes the accent; the
+            result sits off to the side as a tag. Setting the figures in display
+            type made them out-shout the programme they belong to, and it left no
+            room for the line explaining what each figure is measured against. */}
+        <motion.ul
+          style={still ? undefined : { y: runY }}
+          className="mt-16 flex flex-col sm:mt-20"
+        >
+          {community.map((entry) => {
+            const Icon = ICONS[entry.icon];
 
-                <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-                  {/* One mark per year. Three in a row is the point: this is a
-                      role taken up again, not a one-off engagement. */}
-                  <span aria-hidden className="flex gap-1.5">
-                    {item.years.map((year) => (
-                      <span key={year} className="h-2.5 w-7 bg-orange" />
-                    ))}
-                  </span>
-                  <span className="font-mono text-[11px] tracking-[0.18em] text-black/45 uppercase">
-                    {item.years.join(" · ")}
-                  </span>
+            return (
+              <motion.li
+                key={`${entry.programme}-${entry.period}`}
+                variants={row}
+                {...reveal}
+                className="relative border-t border-black/10 last:border-b"
+              >
+                {/* Drawn over the row's own hairline, so the rule reads as
+                    travelling across rather than arriving all at once. */}
+                <motion.span
+                  aria-hidden
+                  variants={rule}
+                  className="absolute inset-x-0 top-0 h-px origin-left bg-black/25"
+                />
+
+                <div className="flex gap-4 py-10 sm:gap-6 sm:py-12">
+                  {/* The mark is its own column so everything to its right —
+                      programme, role, result — starts on one line down the whole
+                      list. Stacking it above the text instead left the role line
+                      hanging out to the left of the name on a phone. */}
+                  <motion.span
+                    variants={mark}
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-orange/10 text-orange"
+                  >
+                    <Icon size={18} strokeWidth={1.75} />
+                  </motion.span>
+
+                  <div className="grid min-w-0 flex-1 gap-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-10">
+                    <div className="min-w-0">
+                      {/* Masked, so the programme rises into place instead of
+                          being there. The padding keeps descenders off the clip
+                          edge; the negative margin takes the space back. */}
+                      <div className="-mb-1 overflow-hidden pb-1">
+                        <motion.h3
+                          variants={programme}
+                          className="font-display text-[1.5rem] leading-[1.05] text-balance text-black uppercase sm:text-[1.9rem]"
+                        >
+                          {entry.programme}
+                        </motion.h3>
+                      </div>
+
+                      <motion.p
+                        variants={meta}
+                        className="mt-3 font-mono text-[13px] tracking-[0.16em] uppercase"
+                      >
+                        <span className="text-orange">{entry.role}</span>
+                        <span aria-hidden className="text-black/30">
+                          {" · "}
+                        </span>
+                        <span className="text-black/55">{entry.period}</span>
+                      </motion.p>
+                    </div>
+
+                    {/* One fixed width and one fixed minimum height, so the four
+                        badges are the same block regardless of how long the note
+                        runs — ragged tags down the column were the inconsistency.
+                        On a phone it goes full width instead of hugging its text,
+                        which stops four different widths stacking up. */}
+                    <motion.div
+                      variants={result}
+                      className="flex w-full flex-wrap items-baseline gap-x-3 gap-y-1 rounded-2xl border border-black/12 px-5 py-3.5 sm:min-h-[4.75rem] sm:w-72 sm:flex-col sm:items-start sm:justify-center sm:gap-y-2"
+                    >
+                      <span className="font-mono text-[14px] leading-none font-semibold tracking-[0.08em] text-black uppercase">
+                        {entry.metric}
+                      </span>
+
+                      <span className="font-mono text-[11px] tracking-[0.04em] text-black/55 uppercase">
+                        {entry.metricNote}
+                      </span>
+                    </motion.div>
+                  </div>
                 </div>
-              </li>
-            ))}
-          </motion.ul>
-        </div>
+              </motion.li>
+            );
+          })}
+        </motion.ul>
       </Container>
     </section>
   );

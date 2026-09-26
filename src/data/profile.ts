@@ -89,11 +89,20 @@ export type DephiliaProduct = {
   background?: string;
 };
 
+/** Keys map to the marks drawn beside each entry in the Community section. Add
+ * a key here and a matching entry in that component's ICONS map. */
+export type CommunityIcon = "cloud" | "brain" | "layers" | "flame";
+
 /** A programme the community work was done for. */
 export type CommunityRole = {
   programme: string;
   role: string;
   period: string;
+  icon: CommunityIcon;
+  /** The result, set in display type. Kept to a figure or two words. */
+  metric: string;
+  /** What that result is measured against. Reads as the line under it. */
+  metricNote: string;
 };
 
 export type Certification = {
@@ -117,33 +126,18 @@ export type Education = {
   detail: string;
 };
 
-/** Keys map to icons in the Activities section. Add a key here and a matching
- * entry in that component's ICONS map. */
-export type ActivityIcon =
-  | "design"
-  | "writing"
-  | "selling"
-  | "building"
-  | "teaching"
-  | "community";
-
-export type Activity = {
-  title: string;
-  description: string;
-  icon: ActivityIcon;
-  /** Optional external link, e.g. a shop or a newsletter. */
-  url?: string;
-};
-
 export const profile: Profile = {
   name: "Kristian David",
   fullName: "",
   role: "",
   location: "Semarang, Indonesia",
-  // Taken from this repo's git commit author. Confirm before shipping.
-  email: "kristiandavid644@gmail.com",
+  email: "kristiandavid@dephilia.com",
   bio: "I'm a fullstack software engineer based in Semarang, Indonesia. I build web products end to end, from the Laravel and Next.js services behind the scenes to the React interfaces people actually use. That has meant SaaS platforms, loyalty systems, and IoT dashboards serving thousands of users.",
-  socials: [],
+  socials: [
+    { label: "Instagram", url: "https://www.instagram.com/kristiandavidd/" },
+    { label: "LinkedIn", url: "https://linkedin.com/in/kristiandavidd/" },
+    { label: "Website", url: "https://kristiandav.id/" },
+  ],
 };
 
 export const skills: SkillGroup[] = [];
@@ -424,7 +418,7 @@ export const projects: Project[] = [
     background: "/images/projects/sea-1.webp",
     foreground: "/images/projects/sea-2.webp",
     sectionBackground: "/images/projects/bg-sea.webp",
-    company:"Sea Design",
+    company: "Sea Design",
     blurb:
       "Print-on-demand storefront letting creators sell designs without holding inventory.",
     summary:
@@ -504,29 +498,45 @@ export const dephiliaProducts: DephiliaProduct[] = [
   },
 ];
 
-// Facilitator roles from the source notes. Kept as data rather than worked into
-// a section yet: they are a recurring yearly role rather than a one-off piece
-// of work, so they do not fit the Activities list's shape of one line each.
+// Facilitator roles from the source notes, kept as four separate engagements —
+// three of them the same programme in consecutive years, which is the point.
+//
+// Written as results rather than as prose. Three of the four share a programme
+// and a role, so the only thing unique to each is its year and its outcome, and
+// a sentence per entry would have repeated the programme name or invented work
+// that was never described. The figures come from the account of the runs.
 export const community: CommunityRole[] = [
   {
     programme: "Google Cloud Arcade Facilitator",
     role: "Facilitator",
     period: "2024",
+    icon: "cloud",
+    metric: "Top 30",
+    metricNote: "of 100 facilitators",
   },
   {
     programme: "Microsoft ElevAIte by Dicoding",
     role: "Facilitator",
     period: "2025",
+    icon: "brain",
+    metric: "2nd",
+    metricNote: "of 5 facilitators",
   },
   {
     programme: "Google Cloud Arcade Facilitator",
     role: "Facilitator",
     period: "2025",
+    icon: "layers",
+    metric: "70+",
+    metricNote: "cohorts facilitated",
   },
   {
     programme: "Google Cloud Arcade Facilitator",
     role: "Facilitator",
     period: "2026",
+    icon: "flame",
+    metric: "Top 40",
+    metricNote: "of 400+ facilitators, milestone met",
   },
 ];
 
@@ -549,15 +559,6 @@ export const certifications: Certification[] = [
     period: "Oct 2025 – Oct 2026",
     logo: "/images/cert-microsoft-2.png",
   },
-];
-
-// Seeded with the three you named. The descriptions are deliberately blank:
-// this section is about what you are actually doing, so the words should be
-// yours. Add more entries any time; the grid takes as many as you give it.
-export const activities: Activity[] = [
-  { title: "Design", description: "", icon: "design" },
-  { title: "Writing", description: "", icon: "writing" },
-  { title: "Selling", description: "", icon: "selling" },
 ];
 
 export const education: Education = {

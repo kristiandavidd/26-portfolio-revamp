@@ -1,9 +1,7 @@
 import { Footer } from "@/components/layout/Footer";
 import { About } from "@/components/sections/About";
-import { Activities } from "@/components/sections/Activities";
 import { Certifications } from "@/components/sections/Certifications";
 import { Community } from "@/components/sections/Community";
-import { Contact } from "@/components/sections/Contact";
 import { Dephilia } from "@/components/sections/Dephilia";
 import { Experience } from "@/components/sections/Experience";
 import { Hero } from "@/components/sections/Hero";
@@ -20,8 +18,6 @@ export default function Home() {
         <Dephilia />
         <Certifications />
         <Community />
-        <Activities />
-        <Contact />
       </main>
       <Footer />
     </>
