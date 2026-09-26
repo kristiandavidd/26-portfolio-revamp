@@ -10,7 +10,11 @@ export function Hero() {
           the artwork, so the portrait itself stays untouched. */}
       <div
         aria-hidden
-        className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_55%_78%_at_50%_90%,rgba(255,92,26,0.72),transparent_72%)]"
+        className="absolute inset-0 -z-10"
+        style={{
+          backgroundImage:
+            "radial-gradient(ellipse 55% 78% at 50% 90%, color-mix(in srgb, var(--color-orange) 72%, transparent), transparent 72%)",
+        }}
       />
 
       {/* Sits on top of the artwork. The pattern's top rows are nearly empty,

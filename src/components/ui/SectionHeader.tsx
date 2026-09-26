@@ -1,12 +1,10 @@
 type SectionHeaderProps = {
-  index: string;
   title: string;
   description?: string;
   tone?: "light" | "dark";
 };
 
 export function SectionHeader({
-  index,
   title,
   description,
   tone = "light",
@@ -15,11 +13,8 @@ export function SectionHeader({
 
   return (
     <header className="max-w-2xl">
-      <span className="font-mono text-xs tracking-[0.2em] text-orange">
-        {index}
-      </span>
       <h2
-        className={`mt-3 text-3xl font-semibold tracking-tight text-balance sm:text-4xl ${
+        className={`font-display text-3xl tracking-widest text-balance uppercase sm:text-4xl ${
           isDark ? "text-white" : ""
         }`.trim()}
       >

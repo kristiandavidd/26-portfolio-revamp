@@ -18,6 +18,20 @@
   --font-display: var(--font-sedgwick-ave-display);
 }
 
+/* The personal personality, expressed as a token override rather than a global
+   switch. Because it is scoped to the element carrying the attribute, the
+   personal route can wear one palette while the rest of the app keeps its own.
+   Surfaces move to soft cream and a warm near-black, the accent from orange to
+   violet; contrast is kept intact, so no component has to know about it. */
+[data-theme="personal"] {
+  --color-white: #f7f0e4;
+  --color-black: #1e1518;
+  --color-orange: #8b5cf6;
+  --color-orange-dark: #6d28d9;
+  --color-muted: #7d6a5f;
+  --color-line: #e3d8c8;
+}
+
 @layer base {
   html,
   body {
@@ -32,5 +46,58 @@
   ::selection {
     background-color: var(--color-orange);
     color: var(--color-white);
+  }
+}
+
+/* A route change is a full remount, so the only way to make the swap read as
+   one surface rather than two pages is to soften the arrival. */
+@keyframes page-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Two copies of the same track slide past each other, so the loop is seamless
+   whichever way the row runs. */
+@keyframes marquee-left {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-100%, 0, 0);
+  }
+}
+
+@keyframes marquee-right {
+  from {
+    transform: translate3d(-100%, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@layer utilities {
+  .page-in {
+    animation: page-in 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .marquee-left {
+    animation: marquee-left var(--marquee-duration, 34s) linear infinite;
+  }
+
+  .marquee-right {
+    animation: marquee-right var(--marquee-duration, 40s) linear infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .page-in,
+    .marquee-left,
+    .marquee-right {
+      animation: none;
+    }
   }
 }

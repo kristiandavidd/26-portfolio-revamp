@@ -1,8 +1,10 @@
-import { BottomNav } from "@/components/layout/BottomNav";
 import { Footer } from "@/components/layout/Footer";
 import { About } from "@/components/sections/About";
+import { Activities } from "@/components/sections/Activities";
 import { Certifications } from "@/components/sections/Certifications";
+import { Community } from "@/components/sections/Community";
 import { Contact } from "@/components/sections/Contact";
+import { Dephilia } from "@/components/sections/Dephilia";
 import { Experience } from "@/components/sections/Experience";
 import { Hero } from "@/components/sections/Hero";
 import { Projects } from "@/components/sections/Projects";
@@ -10,16 +12,18 @@ import { Projects } from "@/components/sections/Projects";
 export default function Home() {
   return (
     <>
-      <main className="flex-1">
+      <main className="page-in flex-1">
         <Hero />
         <About />
         <Experience />
         <Projects />
+        <Dephilia />
         <Certifications />
+        <Community />
+        <Activities />
         <Contact />
       </main>
       <Footer />
-      <BottomNav />
     </>
   );
 }
