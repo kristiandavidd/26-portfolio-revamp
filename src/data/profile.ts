@@ -535,16 +535,19 @@ export const community: CommunityRole[] = [
 // a url is added here.
 export const certifications: Certification[] = [
   {
-    name: "AWS Certified Cloud Practitioner",
+    // The break is authored rather than left to the browser. The two titles are
+    // very different lengths, so letting them wrap on their own puts one card
+    // on a single line and the other on two, and the pair never lines up.
+    name: "AWS Certified\nCloud Practitioner",
     issuer: "Amazon Web Services",
     period: "Nov 2025 – Nov 2028",
-    logo: "/images/cert-aws.png",
+    logo: "/images/cert-aws-2.png",
   },
   {
-    name: "Microsoft Certified: Azure AI Engineer Associate",
+    name: "Microsoft Certified:\nAzure AI Engineer Associate",
     issuer: "Microsoft",
     period: "Oct 2025 – Oct 2026",
-    logo: "/images/cert-microsoft.png",
+    logo: "/images/cert-microsoft-2.png",
   },
 ];
 
