@@ -76,6 +76,17 @@ export type DephiliaProduct = {
   description: string;
   /** Accent for the icon tile. Defaults to the brand orange. */
   accent?: string;
+  /**
+   * Optional path under /public for the mark centred at the top of the card,
+   * e.g. "/images/dephilia/icon-echo.png". Falls back to a monogram tile.
+   */
+  icon?: string;
+  /**
+   * Optional path under /public for the card's backdrop, e.g.
+   * "/images/dephilia/bg-echo.png". Held desaturated until the card is hovered.
+   * Without one the card sits on plain white.
+   */
+  background?: string;
 };
 
 /** A programme the community work was done for. */
@@ -188,7 +199,7 @@ export const projects: Project[] = [
       "The internal CMS behind Sinar Mas Land's loyalty and rewards programme.",
     summary:
       "ForYou is a loyalty and rewards application built by Sinar Mas Land to drive customer engagement across its retail ecosystem. I developed and maintained the internal CMS that operations teams use to run it — campaign content, redeemable rewards, user segments and reporting dashboards.",
-    company: "Sinar Mas Land",
+    company: "Nexa",
     role: "Web Developer",
     tags: ["Laravel", "MySQL"],
     features: [
@@ -413,6 +424,7 @@ export const projects: Project[] = [
     background: "/images/projects/sea-1.webp",
     foreground: "/images/projects/sea-2.webp",
     sectionBackground: "/images/projects/bg-sea.webp",
+    company:"Sea Design",
     blurb:
       "Print-on-demand storefront letting creators sell designs without holding inventory.",
     summary:
@@ -435,6 +447,8 @@ export const dephilia = {
   legalName: "PT Pelita Solusi Digital",
   role: "Founder & Builder",
   tagline: "Not Your Ordinary Solution.",
+  // Confirm the domain before shipping.
+  url: "https://dephilia.com",
   description:
     "A product studio I founded to turn real business challenges into practical digital solutions. From custom websites and business systems to applications and AI-powered solutions, the work is built around how businesses actually operate.",
 };
@@ -449,6 +463,8 @@ export const dephiliaProducts: DephiliaProduct[] = [
     description:
       "A centralized communication layer built to handle transactional email and messaging across Dephilia's digital products and services.",
     accent: "#ff5c1a",
+    icon: "/images/dephilia/icon-echo.png",
+    background: "/images/dephilia/bg-echo-3.png",
   },
   {
     name: "Silos",
@@ -456,6 +472,8 @@ export const dephiliaProducts: DephiliaProduct[] = [
     description:
       "A centralized storage layer built to manage and deliver digital assets across Dephilia's applications and services.",
     accent: "#ff8a1a",
+    icon: "/images/dephilia/icon-silos.png",
+    background: "/images/dephilia/bg-silos-1.png",
   },
   {
     name: "Vessel",
@@ -463,6 +481,8 @@ export const dephiliaProducts: DephiliaProduct[] = [
     description:
       "A payment layer that connects Dephilia's digital products with payment providers through a unified system, simplifying payment operations.",
     accent: "#ffb020",
+    icon: "/images/dephilia/icon-vessel.png",
+    background: "/images/dephilia/bg-vessel-1.png",
   },
   {
     name: "PAD",
@@ -470,6 +490,8 @@ export const dephiliaProducts: DephiliaProduct[] = [
     description:
       "A digital marketplace designed to make professional logo design more accessible by connecting creators with businesses.",
     accent: "#ff6f61",
+    icon: "/images/dephilia/icon-pad.png",
+    background: "/images/dephilia/bg-pad-1.png",
   },
   {
     name: "Surname",
@@ -477,6 +499,8 @@ export const dephiliaProducts: DephiliaProduct[] = [
     description:
       "A lightweight URL shortening service that turns complex URLs into simple, manageable links for easier sharing.",
     accent: "#e04a0d",
+    icon: "/images/dephilia/icon-surname.png",
+    background: "/images/dephilia/bg-surname-3.png",
   },
 ];
 
