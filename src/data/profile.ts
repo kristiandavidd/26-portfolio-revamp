@@ -179,13 +179,14 @@ export const experience: ExperienceItem[] = [
   },
 ];
 
-// The wall, in the order the source notes number them. A warm ramp rather than
-// one brand orange repeated nine times, so the wall reads as a sequence advancing.
+// The wall, in the order the source notes number them. All nine wear the brand
+// orange: a per-project ramp was tried here, and it made the wall read as nine
+// separate products instead of one sequence of work. Each entry can still carry
+// its own `accent` when a case genuinely needs to be told apart.
 export const projects: Project[] = [
   {
     slug: "foryou",
     name: "ForYou",
-    accent: "#ff5c1a",
     background: "/images/projects/foryou-1.webp",
     foreground: "/images/projects/foryou-2.webp",
     sectionBackground: "/images/projects/bg-foryou.webp",
@@ -215,7 +216,6 @@ export const projects: Project[] = [
   {
     slug: "nexa-padel-tournament",
     name: "Nexa Corporate Padel Tournament",
-    accent: "#ff8a1a",
     background: "/images/projects/padel-1.webp",
     foreground: "/images/projects/padel-2.webp",
     sectionBackground: "/images/projects/bg-padel.webp",
@@ -242,7 +242,6 @@ export const projects: Project[] = [
   {
     slug: "home-of-sound",
     name: "Home of Sound",
-    accent: "#ffb020",
     background: "/images/projects/hos-1.webp",
     foreground: "/images/projects/hos-2.webp",
     sectionBackground: "/images/projects/bg-hos.webp",
@@ -269,7 +268,6 @@ export const projects: Project[] = [
   {
     slug: "nexatiket",
     name: "NexaTiket",
-    accent: "#ff6f61",
     background: "/images/projects/nexatiket-1.webp",
     foreground: "/images/projects/nexatiket-2.webp",
     sectionBackground: "/images/projects/bg-nexatiket.webp",
@@ -297,7 +295,6 @@ export const projects: Project[] = [
   {
     slug: "findpix",
     name: "FindPix",
-    accent: "#ff3d3d",
     background: "/images/projects/findpix-1.webp",
     foreground: "/images/projects/findpix-2.webp",
     sectionBackground: "/images/projects/bg-findpix.webp",
@@ -323,7 +320,6 @@ export const projects: Project[] = [
   {
     slug: "nexa-messenger",
     name: "Nexa Messenger",
-    accent: "#e04a0d",
     background: "/images/projects/messenger-1.webp",
     foreground: "/images/projects/messenger-2.webp",
     sectionBackground: "/images/projects/bg-messenger.webp",
@@ -356,7 +352,6 @@ export const projects: Project[] = [
   {
     slug: "semarang-great-sale",
     name: "Semarang Great Sale",
-    accent: "#ff9f45",
     company: "Nexa",
     background: "/images/projects/semargres-1.webp",
     foreground: "/images/projects/semargres-2.webp",
@@ -385,7 +380,6 @@ export const projects: Project[] = [
   {
     slug: "swiftlead",
     name: "Swiftlead",
-    accent: "#ffcf5c",
     background: "/images/projects/swiftlead-1.webp",
     foreground: "/images/projects/swiftlead-2.webp",
     sectionBackground: "/images/projects/bg-swiftlead.webp",
@@ -414,7 +408,6 @@ export const projects: Project[] = [
   {
     slug: "sea-design",
     name: "Sea Design",
-    accent: "#ff7b2e",
     background: "/images/projects/sea-1.webp",
     foreground: "/images/projects/sea-2.webp",
     sectionBackground: "/images/projects/bg-sea.webp",

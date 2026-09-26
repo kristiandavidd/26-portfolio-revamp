@@ -6,10 +6,8 @@ import Image from "next/image";
 import {
   motion,
   useMotionTemplate,
-  useMotionValue,
   useReducedMotion,
   useScroll,
-  useSpring,
   useTransform,
 } from "framer-motion";
 import { Container } from "@/components/ui/Container";
@@ -101,9 +99,10 @@ function ProjectScene({ project, index }: { project: Project; index: number }) {
   // artwork get one; the rest stay on flat black.
   const backY = useTransform(scrollYProgress, EASE, eased(-40, 40));
 
-  // The two layers drift on one axis in the same direction, not against each
-  // other: the reference point is a car window, where near things move fast and
-  // far things move slow. Opposite directions read as a mechanism, not as depth.
+  // The two artwork layers drift on one axis in the same direction, not against
+  // each other: the reference point is a car window, where near things move fast
+  // and far things move slow. Opposite directions read as a mechanism, not as
+  // depth.
   //
   // The previous version had both layers driven linearly over one shared range,
   // which made the foreground a fixed multiple of the background: same start,
@@ -114,10 +113,19 @@ function ProjectScene({ project, index }: { project: Project; index: number }) {
   // artwork was exactly what you saw, and the separation only happened out in
   // the fade.
   //
-  // Now each layer has its own rate curve, so neither is a multiple of the
-  // other, and the single aligned position sits at 0.28: the moment the scene
-  // reaches full opacity. The composite reads on arrival, then the two planes
-  // separate and keep separating for the rest of the transit.
+  // So each plane carries a curve of its own, and the two are in register at
+  // exactly one point: 0.28, the moment the scene has finished arriving and the
+  // moment the composite should read as a single image. From there they separate
+  // and keep separating for the rest of the transit, which is also what tells
+  // their exits apart — the far plane goes on the shorter line, the near plane
+  // on the longer one.
+  //
+  // Neither curve starts before 0.28. The arrival is the expensive window: the
+  // wrapper is running a full-width blur down from 18px across the whole subtree
+  // the moment the scene appears, and moving a pair of 1600px layers inside that
+  // filtered subtree lands a second job on the same frames. Holding the planes
+  // still until the scene has arrived costs nothing visually — at that point they
+  // are composite and unreadable — and leaves the entrance to the one pass.
   const bgDrift = useTransform(
     scrollYProgress,
     [0.28, 0.6, 0.95],
@@ -128,29 +136,6 @@ function ProjectScene({ project, index }: { project: Project; index: number }) {
     [0.28, 0.6, 0.95],
     [0, -50, -84]
   );
-
-  // `lift` adds a second, faster pass when the frame is hovered or focused, so
-  // the separation can also be caused by hand instead of only by scrolling.
-  const lift = useMotionValue(0);
-  const lifted = useSpring(lift, { stiffness: 240, damping: 28, mass: 0.6 });
-
-  const bgY = useTransform<number, number>(
-    [bgDrift, lifted],
-    ([drift, up]) => drift + up * 14
-  );
-  const fgY = useTransform<number, number>(
-    [fgDrift, lifted],
-    ([drift, up]) => drift - up * 40
-  );
-
-  // This is the only filter left on the artwork, and it is driven by the
-  // pointer rather than by the scroll, so it settles once after the hover
-  // instead of being re-rasterised on every scroll frame. The saturation pass
-  // that used to ride the scroll alongside it is gone: a saturate() over a
-  // 1600px image re-runs the whole filter chain each frame, and the depth
-  // already reads from the separation in position.
-  const bgBlur = useTransform(lifted, [0, 1], [1.2, 3]);
-  const bgFilter = useMotionTemplate`blur(${bgBlur}px)`;
 
   return (
     <div
@@ -270,10 +255,6 @@ function ProjectScene({ project, index }: { project: Project; index: number }) {
               <Link
                 href={`/projects/${project.slug}`}
                 aria-label={`${project.name} — read the case`}
-                onMouseEnter={() => lift.set(1)}
-                onMouseLeave={() => lift.set(0)}
-                onFocus={() => lift.set(1)}
-                onBlur={() => lift.set(0)}
                 className="relative block"
               >
                 {project.background ? (
@@ -281,15 +262,18 @@ function ProjectScene({ project, index }: { project: Project; index: number }) {
                     {/* The background is in flow, so it is what gives the pair
                         its size, and the foreground is laid over it at exactly
                         the same box. Same canvas, same scale: they are locked
-                        together until the motion pulls them apart. */}
+                        together until the motion pulls them apart.
+
+                        It also sits a touch out of focus behind the sharp
+                        foreground. That defocus is dropped along with the motion
+                        as soon as the scene is parked off screen: a filtered
+                        layer is a second raster pass on top of the wrapper's own
+                        blur, and keeping nine of them alive buys nothing anyone
+                        can see. */}
                     <motion.span
                       aria-hidden
-                      style={
-                        still || !near
-                          ? undefined
-                          : { y: bgY, filter: bgFilter }
-                      }
-                      className="block"
+                      style={still || !near ? undefined : { y: bgDrift }}
+                      className={near ? "block blur-[1.2px]" : "block"}
                     >
                       <Image
                         src={project.background}
@@ -304,7 +288,7 @@ function ProjectScene({ project, index }: { project: Project; index: number }) {
                     {project.foreground ? (
                       <motion.span
                         aria-hidden
-                        style={still || !near ? undefined : { y: fgY }}
+                        style={still || !near ? undefined : { y: fgDrift }}
                         className="absolute inset-0 block"
                       >
                         <Image
