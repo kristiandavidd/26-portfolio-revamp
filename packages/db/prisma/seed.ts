@@ -93,7 +93,6 @@ async function clearContent() {
   await prisma.certification.deleteMany();
   await prisma.communityRole.deleteMany();
   await prisma.education.deleteMany();
-  await prisma.personalSection.deleteMany();
 }
 
 async function main() {
@@ -513,9 +512,8 @@ async function main() {
         slug: project.slug,
         name: project.name,
         companyId: companyIds.get(project.company)!,
-        logoAssetId: assetId(`company/${
-          project.company === "sea-design" ? "sea" : project.company
-        }.png`),
+        logoAssetId: assetId(`company/${project.company === "sea-design" ? "sea" : project.company
+          }.png`),
         backgroundAssetId: assetId(project.background),
         foregroundAssetId: assetId(project.foreground),
         sectionBackgroundAssetId: assetId(project.sectionBackground),
@@ -665,15 +663,28 @@ async function main() {
   await prisma.education.create({ data: { id: 1 } });
 
   // -------------------------------------------------------------------------
-  // Personal placeholder
+  // Personal landing
   // -------------------------------------------------------------------------
-  await prisma.personalSection.createMany({
-    data: [
-      { key: "about", title: "About", body: "", sortOrder: 0 },
-      { key: "now", title: "Now", body: "", sortOrder: 1 },
-      { key: "notes", title: "Notes", body: "", sortOrder: 2 },
-    ],
+  // Seeded once from the professional profile, then edited in the panel. The
+  // update is intentionally empty so re-seeding never wipes personal copy.
+  const profileRow = await prisma.profile.findUnique({ where: { id: 1 } });
+  const personalProfile = await prisma.personalProfile.findUnique({
+    where: { id: 1 },
   });
+
+  if (!personalProfile) {
+    await prisma.personalProfile.create({
+      data: {
+        id: 1,
+        name: profileRow?.name ?? "Kristian David",
+        headline: profileRow?.role || "Fullstack Software Engineer",
+        intro: profileRow?.bio ?? "",
+        location: profileRow?.location ?? "",
+        email: profileRow?.email ?? "",
+        portraitAssetId: profileRow?.heroPortraitAssetId ?? null,
+      },
+    });
+  }
 
   console.log("✓ Content seeded");
 }

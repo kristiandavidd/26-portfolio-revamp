@@ -7,7 +7,8 @@ import {
   type CommunityRoleView,
   type DephiliaProductView,
   type ExperienceView,
-  type PersonalSectionView,
+  type PersonalContent,
+  type PersonalImageView,
   type ProjectView,
   type SiteContent,
 } from "./types";
@@ -211,17 +212,86 @@ export async function getSiteContent(): Promise<SiteContent> {
   };
 }
 
-export async function getPersonalSections(): Promise<PersonalSectionView[]> {
-  const rows = await prisma.personalSection.findMany({
-    where: { status: 1 },
-    orderBy: { sortOrder: "asc" },
-  });
+const personalImage = {
+  select: { url: true, width: true, height: true },
+} satisfies Prisma.AssetDefaultArgs;
 
-  return rows.map((row) => ({
-    key: row.key,
-    title: row.title,
-    body: row.body,
-  }));
+function toPersonalImage(
+  asset: { url: string; width: number | null; height: number | null } | null,
+): PersonalImageView | null {
+  return asset
+    ? { url: asset.url, width: asset.width, height: asset.height }
+    : null;
+}
+
+export async function getPersonalContent(): Promise<PersonalContent> {
+  const [profile, story, places, gallery, wishlist] = await Promise.all([
+    prisma.personalProfile.findUnique({
+      where: { id: 1 },
+      include: { portraitAsset: personalImage },
+    }),
+    prisma.personalStory.findMany({
+      where: { status: 1 },
+      orderBy: { sortOrder: "asc" },
+      include: { imageAsset: personalImage },
+    }),
+    prisma.personalPlace.findMany({
+      where: { status: 1 },
+      orderBy: { sortOrder: "asc" },
+      include: { imageAsset: personalImage },
+    }),
+    prisma.personalGalleryItem.findMany({
+      where: { status: 1 },
+      orderBy: { sortOrder: "asc" },
+      include: { imageAsset: personalImage },
+    }),
+    prisma.personalWishlistItem.findMany({
+      where: { status: 1 },
+      orderBy: { sortOrder: "asc" },
+      include: { imageAsset: personalImage },
+    }),
+  ]);
+
+  return {
+    profile: {
+      name: profile?.name ?? "",
+      headline: profile?.headline ?? "",
+      intro: profile?.intro ?? "",
+      location: profile?.location ?? "",
+      email: profile?.email ?? "",
+      portrait: toPersonalImage(profile?.portraitAsset ?? null),
+    },
+    story: story.map((row) => ({
+      id: row.id,
+      period: row.periodLabel,
+      title: row.title,
+      body: row.body,
+      image: toPersonalImage(row.imageAsset),
+    })),
+    places: places.map((row) => ({
+      id: row.id,
+      name: row.name,
+      region: row.region,
+      year: row.year,
+      note: row.note,
+      mapsUrl: row.mapsUrl,
+      image: toPersonalImage(row.imageAsset),
+    })),
+    gallery: gallery.map((row) => ({
+      id: row.id,
+      title: row.title,
+      year: row.year,
+      note: row.note,
+      image: toPersonalImage(row.imageAsset),
+    })),
+    wishlist: wishlist.map((row) => ({
+      id: row.id,
+      title: row.title,
+      note: row.note,
+      done: row.done,
+      image: toPersonalImage(row.imageAsset),
+    })),
+  };
 }
 
 export { BRAND_ACCENT };

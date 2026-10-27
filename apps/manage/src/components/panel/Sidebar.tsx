@@ -6,14 +6,19 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   Award,
+  BookOpen,
   Briefcase,
   Building2,
   FolderKanban,
+  Images,
   LayoutDashboard,
+  ListChecks,
   LogOut,
   Mail,
+  MapPin,
   Menu,
   Package,
+  Sparkles,
   User,
   X,
   type LucideIcon,
@@ -25,6 +30,7 @@ type NavItem = {
   href: string;
   label: string;
   icon: LucideIcon;
+  exact?: boolean;
 };
 
 const GROUPS: { label: string; items: NavItem[] }[] = [
@@ -38,6 +44,16 @@ const GROUPS: { label: string; items: NavItem[] }[] = [
       { href: "/projects", label: "Projects", icon: FolderKanban },
       { href: "/products", label: "Dephilia products", icon: Package },
       { href: "/credentials", label: "Credentials", icon: Award },
+    ],
+  },
+  {
+    label: "Personal",
+    items: [
+      { href: "/personal", label: "Landing", icon: Sparkles, exact: true },
+      { href: "/personal/story", label: "Story", icon: BookOpen },
+      { href: "/personal/places", label: "Places", icon: MapPin },
+      { href: "/personal/gallery", label: "Gallery", icon: Images },
+      { href: "/personal/wishlist", label: "Wishlist", icon: ListChecks },
     ],
   },
   {
@@ -88,8 +104,9 @@ function Navigation({ onNavigate }: { onNavigate?: () => void }) {
           <ul className="flex flex-col gap-0.5">
             {group.items.map((item) => {
               const Icon = item.icon;
-              const active =
-                item.href === "/"
+              const active = item.exact
+                ? pathname === item.href
+                : item.href === "/"
                   ? pathname === "/"
                   : pathname.startsWith(item.href);
 

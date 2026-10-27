@@ -7,7 +7,7 @@ UI components.
 | --- | --- | --- | --- |
 | Portfolio | `apps/portfolio` | 3000 | The professional portfolio (the existing site) |
 | Manage | `apps/manage` | 3001 | Content panel: profile, experience, companies, projects, products, credentials, messages |
-| Personal | `apps/personal` | 3002 | Placeholder for the personal side |
+| Personal | `apps/personal` | 3002 | The personal side: landing, story, places, gallery, wishlist |
 
 ## Stack
 
@@ -24,7 +24,7 @@ UI components.
 apps/
   portfolio/          public portfolio
   manage/             content panel
-  personal/           personal placeholder
+  personal/           personal site (landing, story, places, gallery, wishlist)
 packages/
   config/             shared tsconfig + next-with-root-env launcher
   db/                 Prisma schema, client, queries, seed, migrations
@@ -73,6 +73,25 @@ longer references any file under a local `public/images` folder.
 Silos has no public “create folder” endpoint for API keys, so uploads land at
 the project root. The panel uses the `folder` column as a logical grouping.
 
+## Personal side
+
+`apps/personal` is a separate site that shares the portfolio's design system —
+the same type stack, smooth scrolling and reveal motion, with a violet accent in
+place of orange — and the same floating dock navigation. It differs by content
+and layout, not by a second visual identity.
+
+| Route | What it shows |
+| --- | --- |
+| `/` | Landing: portrait, intro, and an index of the four sections |
+| `/story` | Chronological timeline, one card per period |
+| `/places` | Grid of visited places with year, note and map link |
+| `/gallery` | Masonry photo wall with a keyboard-navigable lightbox |
+| `/wishlist` | Checklist split into still-to-do and done, with progress |
+
+Everything is edited in the panel under **Personal** (Landing, Story, Places,
+Gallery, Wishlist). Story, places, gallery and wishlist are reorderable with the
+arrow buttons; wishlist items are ticked off from the panel.
+
 ## Email
 
 The panel sends replies and test email through Echo, and mirrors every attempt
@@ -101,7 +120,8 @@ Main tables:
 | `tb_certification`, `tb_community_role`, `tb_education` | Credentials |
 | `tb_asset` | Silos files and metadata |
 | `tb_contact_message`, `tb_email_log` | Inbox and email trail |
-| `tb_personal_section` | Placeholder content for the personal app |
+| `tb_personal_profile` | Personal landing: name, headline, intro, portrait |
+| `tb_personal_story`, `tb_personal_place`, `tb_personal_gallery_item`, `tb_personal_wishlist_item` | Personal sections, ordered by `sort_order` |
 
 Schema: [`packages/db/prisma/schema.prisma`](packages/db/prisma/schema.prisma).
 

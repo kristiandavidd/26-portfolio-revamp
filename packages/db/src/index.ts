@@ -2,5 +2,5 @@ export { prisma, Prisma } from "./client";
 export * from "./types";
 export {
   getSiteContent,
-  getPersonalSections,
+  getPersonalContent,
 } from "./queries";

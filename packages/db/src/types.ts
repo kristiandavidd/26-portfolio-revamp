@@ -119,10 +119,61 @@ export type SiteContent = {
   settings: SiteSettings;
 };
 
-export type PersonalSectionView = {
-  key: string;
+export type PersonalImageView = {
+  url: string;
+  width: number | null;
+  height: number | null;
+};
+
+export type PersonalProfileView = {
+  name: string;
+  headline: string;
+  intro: string;
+  location: string;
+  email: string;
+  portrait: PersonalImageView | null;
+};
+
+export type PersonalStoryView = {
+  id: string;
+  period: string;
   title: string;
   body: string;
+  image: PersonalImageView | null;
+};
+
+export type PersonalPlaceView = {
+  id: string;
+  name: string;
+  region: string;
+  year: string;
+  note: string;
+  mapsUrl: string | null;
+  image: PersonalImageView | null;
+};
+
+export type PersonalGalleryView = {
+  id: string;
+  title: string;
+  year: string;
+  note: string;
+  image: PersonalImageView | null;
+};
+
+export type PersonalWishlistView = {
+  id: string;
+  title: string;
+  note: string;
+  done: boolean;
+  image: PersonalImageView | null;
+};
+
+export type PersonalContent = {
+  profile: PersonalProfileView;
+  story: PersonalStoryView[];
+  places: PersonalPlaceView[];
+  gallery: PersonalGalleryView[];
+  wishlist: PersonalWishlistView[];
 };
 
 export const BRAND_ACCENT = "#ff5c1a";

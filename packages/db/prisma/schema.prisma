@@ -93,6 +93,11 @@ model Asset {
   productIcons            DephiliaProduct[] @relation("ProductIcon")
   productBackgrounds      DephiliaProduct[] @relation("ProductBackground")
   certificationLogos      Certification[]   @relation("CertificationLogo")
+  personalPortraits       PersonalProfile[] @relation("PersonalPortrait")
+  personalStoryImages     PersonalStory[]   @relation("PersonalStoryImage")
+  personalPlaceImages     PersonalPlace[]   @relation("PersonalPlaceImage")
+  personalGalleryImages   PersonalGalleryItem[] @relation("PersonalGalleryImage")
+  personalWishlistImages  PersonalWishlistItem[] @relation("PersonalWishlistImage")
 
   @@index([scope, status])
   @@map("tb_asset")
@@ -365,17 +370,101 @@ model EmailLog {
   @@map("tb_email_log")
 }
 
-/// Placeholder content for the personal app. Rows are edited from the panel
-/// once the content is decided.
-model PersonalSection {
-  id        String @id @default(cuid())
-  key       String @unique
-  title     String @default("")
-  body      String @default("")
-  sortOrder Int    @default(0) @map("sort_order")
-  status    Int    @default(1)
+// ---------------------------------------------------------------------------
+// Personal side
+// ---------------------------------------------------------------------------
+
+/// Singleton row (id = 1) for the personal landing.
+model PersonalProfile {
+  id              Int    @id @default(1)
+  name            String @default("")
+  headline        String @default("")
+  intro           String @default("")
+  location        String @default("")
+  email           String @default("")
+  portraitAssetId String? @map("portrait_asset_id")
 
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@map("tb_personal_section")
+  portraitAsset Asset? @relation("PersonalPortrait", fields: [portraitAssetId], references: [id], onDelete: SetNull)
+
+  @@map("tb_personal_profile")
+}
+
+/// Chronological story cards. One period per card, one to two paragraphs.
+model PersonalStory {
+  id           String  @id @default(cuid())
+  periodLabel  String  @default("") @map("period_label")
+  title        String
+  body         String  @default("")
+  imageAssetId String? @map("image_asset_id")
+  sortOrder    Int     @default(0) @map("sort_order")
+  status       Int     @default(1)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  imageAsset Asset? @relation("PersonalStoryImage", fields: [imageAssetId], references: [id], onDelete: SetNull)
+
+  @@index([status, sortOrder])
+  @@map("tb_personal_story")
+}
+
+/// Places that have been visited, with an optional map link.
+model PersonalPlace {
+  id           String  @id @default(cuid())
+  name         String
+  region       String  @default("")
+  year         String  @default("")
+  note         String  @default("")
+  mapsUrl      String? @map("maps_url")
+  imageAssetId String? @map("image_asset_id")
+  sortOrder    Int     @default(0) @map("sort_order")
+  status       Int     @default(1)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  imageAsset Asset? @relation("PersonalPlaceImage", fields: [imageAssetId], references: [id], onDelete: SetNull)
+
+  @@index([status, sortOrder])
+  @@map("tb_personal_place")
+}
+
+/// Photographs with a year and a one-line note.
+model PersonalGalleryItem {
+  id           String  @id @default(cuid())
+  title        String  @default("")
+  year         String  @default("")
+  note         String  @default("")
+  imageAssetId String? @map("image_asset_id")
+  sortOrder    Int     @default(0) @map("sort_order")
+  status       Int     @default(1)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  imageAsset Asset? @relation("PersonalGalleryImage", fields: [imageAssetId], references: [id], onDelete: SetNull)
+
+  @@index([status, sortOrder])
+  @@map("tb_personal_gallery_item")
+}
+
+/// Things still wanted, ticked off from the panel.
+model PersonalWishlistItem {
+  id           String  @id @default(cuid())
+  title        String
+  note         String  @default("")
+  imageAssetId String? @map("image_asset_id")
+  done         Boolean @default(false)
+  sortOrder    Int     @default(0) @map("sort_order")
+  status       Int     @default(1)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  imageAsset Asset? @relation("PersonalWishlistImage", fields: [imageAssetId], references: [id], onDelete: SetNull)
+
+  @@index([status, sortOrder])
+  @@map("tb_personal_wishlist_item")
 }
