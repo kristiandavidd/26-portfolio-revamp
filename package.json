@@ -1,29 +1,33 @@
 {
-  "name": "26-portfolio-revamp",
-  "version": "0.1.0",
+  "name": "kristian-portfolio-monorepo",
+  "version": "1.0.0",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-  },
-  "dependencies": {
-    "framer-motion": "^13.1.1",
-    "lenis": "^1.3.26",
-    "lucide-react": "^1.33.0",
-    "next": "16.3.2",
-    "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "dev:portfolio": "npm run dev --workspace @repo/portfolio",
+    "dev:manage": "npm run dev --workspace @repo/manage",
+    "dev:personal": "npm run dev --workspace @repo/personal",
+    "build:portfolio": "npm run build --workspace @repo/portfolio",
+    "build:manage": "npm run build --workspace @repo/manage",
+    "build:personal": "npm run build --workspace @repo/personal",
+    "build": "npm run build:portfolio && npm run build:manage && npm run build:personal",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "db:generate": "prisma generate --schema packages/db/prisma/schema.prisma",
+    "db:migrate": "prisma migrate dev --schema packages/db/prisma/schema.prisma",
+    "db:push": "prisma db push --schema packages/db/prisma/schema.prisma",
+    "db:seed": "node --env-file-if-exists=.env --import tsx packages/db/prisma/seed.ts",
+    "db:studio": "prisma studio --schema packages/db/prisma/schema.prisma",
+    "assets:upload": "node --env-file-if-exists=.env packages/db/scripts/upload-assets.mjs",
+    "postinstall": "prisma generate --schema packages/db/prisma/schema.prisma"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.3.2",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5.9.0"
+  },
+  "engines": {
+    "node": ">=20.9.0"
   }
 }

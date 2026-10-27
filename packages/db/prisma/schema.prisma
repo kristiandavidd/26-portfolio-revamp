@@ -1,0 +1,381 @@
+// Database conventions
+// --------------------
+// ms_ = master / reference data (slow-changing, shared across features)
+// tb_ = regular data (content and activity)
+// Every table and column is snake_case; Prisma fields stay camelCase.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Master
+// ---------------------------------------------------------------------------
+
+/// Technology / topic vocabulary shared by projects and case pages.
+model Tag {
+  id        String @id @default(cuid())
+  slug      String @unique
+  name      String
+  status    Int    @default(1)
+  sortOrder Int    @default(0) @map("sort_order")
+
+  projects ProjectTag[]
+
+  @@map("ms_tag")
+}
+
+/// Employers and clients. Carries the mark used by experience panels and by
+/// project plates that show a client logo instead of artwork.
+model Company {
+  id          String @id @default(cuid())
+  slug        String @unique
+  name        String
+  website     String?
+  summary     String?
+  logoAssetId String? @map("logo_asset_id")
+  status      Int     @default(1)
+  sortOrder   Int     @default(0) @map("sort_order")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  logo        Asset?       @relation("CompanyLogo", fields: [logoAssetId], references: [id], onDelete: SetNull)
+  experiences Experience[]
+  projects    Project[]
+
+  @@map("ms_company")
+}
+
+// ---------------------------------------------------------------------------
+// Assets
+// ---------------------------------------------------------------------------
+
+/// A file stored in Silos. The binary lives in Silos; this row holds the CDN
+/// URL plus the metadata needed to render and manage it.
+model Asset {
+  id           String   @id @default(cuid())
+  silosFileId  String   @unique @map("silos_file_id")
+  filename     String
+  originalName String   @map("original_name")
+  mimeType     String   @map("mime_type")
+  sizeBytes    Int      @default(0) @map("size_bytes")
+  url          String
+  width        Int?
+  height       Int?
+  alt          String?
+  /// image | video | document | icon
+  kind         String   @default("image")
+  /// Which app the asset belongs to: portfolio | personal | shared
+  scope        String   @default("portfolio")
+  /// Logical grouping inside Silos, e.g. "projects/foryou".
+  folder       String   @default("")
+  status       Int      @default(1)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  companyLogos            Company[]         @relation("CompanyLogo")
+  profileLogos            Profile[]         @relation("ProfileLogo")
+  profileHeroPortraits    Profile[]         @relation("ProfileHeroPortrait")
+  profileAboutBackgrounds Profile[]         @relation("ProfileAboutBackground")
+  profileFooterBackgrounds Profile[]        @relation("ProfileFooterBackground")
+  heroPatterns            HeroPattern[]
+  projectLogos            Project[]         @relation("ProjectLogo")
+  projectBackgrounds      Project[]         @relation("ProjectBackground")
+  projectForegrounds      Project[]         @relation("ProjectForeground")
+  projectSectionBackgrounds Project[]       @relation("ProjectSectionBackground")
+  productIcons            DephiliaProduct[] @relation("ProductIcon")
+  productBackgrounds      DephiliaProduct[] @relation("ProductBackground")
+  certificationLogos      Certification[]   @relation("CertificationLogo")
+
+  @@index([scope, status])
+  @@map("tb_asset")
+}
+
+// ---------------------------------------------------------------------------
+// Portfolio content
+// ---------------------------------------------------------------------------
+
+/// Singleton row (id = 1). The whole personal profile, including the marks
+/// used in the hero, about band and footer.
+model Profile {
+  id   Int    @id @default(1)
+  name String
+  fullName   String @default("") @map("full_name")
+  role       String @default("")
+  location   String @default("")
+  email      String @default("")
+  bio        String @default("")
+  heroLine1  String @default("") @map("hero_line_1")
+  heroLine2  String @default("") @map("hero_line_2")
+  aboutHeading    String @default("") @map("about_heading")
+  footerTagline   String @default("") @map("footer_tagline")
+
+  logoAssetId             String? @map("logo_asset_id")
+  heroPortraitAssetId     String? @map("hero_portrait_asset_id")
+  aboutBackgroundAssetId  String? @map("about_background_asset_id")
+  footerBackgroundAssetId String? @map("footer_background_asset_id")
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  logoAsset             Asset? @relation("ProfileLogo", fields: [logoAssetId], references: [id], onDelete: SetNull)
+  heroPortraitAsset     Asset? @relation("ProfileHeroPortrait", fields: [heroPortraitAssetId], references: [id], onDelete: SetNull)
+  aboutBackgroundAsset  Asset? @relation("ProfileAboutBackground", fields: [aboutBackgroundAssetId], references: [id], onDelete: SetNull)
+  footerBackgroundAsset Asset? @relation("ProfileFooterBackground", fields: [footerBackgroundAssetId], references: [id], onDelete: SetNull)
+
+  socials      SocialLink[]
+  heroPatterns HeroPattern[]
+
+  @@map("tb_profile")
+}
+
+model SocialLink {
+  id        String @id @default(cuid())
+  profileId Int    @default(1) @map("profile_id")
+  label     String
+  url       String
+  /// Icon key resolved by the app: instagram | linkedin | website | mail
+  icon      String @default("website")
+  sortOrder Int    @default(0) @map("sort_order")
+  status    Int    @default(1)
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@map("tb_social_link")
+}
+
+/// The frames that rotate behind the hero portrait.
+model HeroPattern {
+  id        String @id @default(cuid())
+  profileId Int    @default(1) @map("profile_id")
+  assetId   String @map("asset_id")
+  sortOrder Int    @default(0) @map("sort_order")
+  status    Int    @default(1)
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  asset   Asset   @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@map("tb_hero_pattern")
+}
+
+model Experience {
+  id          String @id @default(cuid())
+  companyId   String @map("company_id")
+  role        String
+  periodLabel String @map("period_label")
+  isCurrent   Boolean @default(false) @map("is_current")
+  sortOrder   Int     @default(0) @map("sort_order")
+  status      Int     @default(1)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  company    Company             @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  highlights ExperienceHighlight[]
+
+  @@index([companyId])
+  @@map("tb_experience")
+}
+
+model ExperienceHighlight {
+  id           String @id @default(cuid())
+  experienceId String @map("experience_id")
+  content      String
+  sortOrder    Int    @default(0) @map("sort_order")
+
+  experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+
+  @@index([experienceId])
+  @@map("tb_experience_highlight")
+}
+
+model Project {
+  id                      String  @id @default(cuid())
+  slug                    String  @unique
+  name                    String
+  companyId               String? @map("company_id")
+  logoAssetId             String? @map("logo_asset_id")
+  backgroundAssetId       String? @map("background_asset_id")
+  foregroundAssetId       String? @map("foreground_asset_id")
+  sectionBackgroundAssetId String? @map("section_background_asset_id")
+  accent                  String?
+  blurb                   String  @default("")
+  summary                 String  @default("")
+  role                    String?
+  periodLabel             String? @map("period_label")
+  isFeatured              Boolean @default(true) @map("is_featured")
+  sortOrder               Int     @default(0) @map("sort_order")
+  status                  Int     @default(1)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  company               Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  logoAsset             Asset?   @relation("ProjectLogo", fields: [logoAssetId], references: [id], onDelete: SetNull)
+  backgroundAsset       Asset?   @relation("ProjectBackground", fields: [backgroundAssetId], references: [id], onDelete: SetNull)
+  foregroundAsset       Asset?   @relation("ProjectForeground", fields: [foregroundAssetId], references: [id], onDelete: SetNull)
+  sectionBackgroundAsset Asset?  @relation("ProjectSectionBackground", fields: [sectionBackgroundAssetId], references: [id], onDelete: SetNull)
+
+  features ProjectFeature[]
+  tags     ProjectTag[]
+
+  @@index([status, sortOrder])
+  @@map("tb_project")
+}
+
+model ProjectFeature {
+  id        String @id @default(cuid())
+  projectId String @map("project_id")
+  content   String
+  sortOrder Int    @default(0) @map("sort_order")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("tb_project_feature")
+}
+
+model ProjectTag {
+  projectId String @map("project_id")
+  tagId     String @map("tag_id")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, tagId])
+  @@map("tb_project_tag")
+}
+
+model DephiliaProduct {
+  id              String  @id @default(cuid())
+  slug            String  @unique
+  name            String
+  category        String
+  description     String  @default("")
+  accent          String?
+  iconAssetId     String? @map("icon_asset_id")
+  backgroundAssetId String? @map("background_asset_id")
+  url             String?
+  sortOrder       Int     @default(0) @map("sort_order")
+  status          Int     @default(1)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  iconAsset       Asset? @relation("ProductIcon", fields: [iconAssetId], references: [id], onDelete: SetNull)
+  backgroundAsset Asset? @relation("ProductBackground", fields: [backgroundAssetId], references: [id], onDelete: SetNull)
+
+  @@map("tb_dephilia_product")
+}
+
+model Certification {
+  id           String  @id @default(cuid())
+  name         String
+  issuer       String
+  periodLabel  String  @map("period_label")
+  accent       String?
+  logoAssetId  String? @map("logo_asset_id")
+  credentialId String? @map("credential_id")
+  url          String?
+  sortOrder    Int     @default(0) @map("sort_order")
+  status       Int     @default(1)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  logoAsset Asset? @relation("CertificationLogo", fields: [logoAssetId], references: [id], onDelete: SetNull)
+
+  @@map("tb_certification")
+}
+
+model CommunityRole {
+  id          String @id @default(cuid())
+  programme   String
+  role        String
+  periodLabel String @map("period_label")
+  /// Icon key resolved by the app: cloud | brain | layers | flame
+  icon        String @default("cloud")
+  metric      String @default("")
+  metricNote  String @default("") @map("metric_note")
+  sortOrder   Int    @default(0) @map("sort_order")
+  status      Int    @default(1)
+
+  @@map("tb_community_role")
+}
+
+/// Singleton row (id = 1).
+model Education {
+  id          Int    @id @default(1)
+  school      String @default("")
+  degree      String @default("")
+  periodLabel String @default("") @map("period_label")
+  detail      String @default("")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("tb_education")
+}
+
+// ---------------------------------------------------------------------------
+// Activity
+// ---------------------------------------------------------------------------
+
+/// Messages sent from the portfolio contact form.
+model ContactMessage {
+  id      String @id @default(cuid())
+  name    String
+  email   String
+  subject String @default("")
+  message String
+  /// new | read | replied | archived
+  status  String @default("new")
+  source  String @default("portfolio")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  emailLogs EmailLog[]
+
+  @@index([status, createdAt])
+  @@map("tb_contact_message")
+}
+
+/// Mirror of what was handed to Echo, so the panel can show delivery state
+/// without calling Echo on every page load.
+model EmailLog {
+  id               String  @id @default(cuid())
+  contactMessageId String? @map("contact_message_id")
+  /// contact | test | reply
+  kind             String  @default("contact")
+  toEmail          String  @map("to_email")
+  subject          String  @default("")
+  provider         String  @default("echo")
+  status           String  @default("sent")
+  error            String?
+  sentAt           DateTime @default(now()) @map("sent_at")
+
+  contactMessage ContactMessage? @relation(fields: [contactMessageId], references: [id], onDelete: SetNull)
+
+  @@index([sentAt])
+  @@map("tb_email_log")
+}
+
+/// Placeholder content for the personal app. Rows are edited from the panel
+/// once the content is decided.
+model PersonalSection {
+  id        String @id @default(cuid())
+  key       String @unique
+  title     String @default("")
+  body      String @default("")
+  sortOrder Int    @default(0) @map("sort_order")
+  status    Int    @default(1)
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("tb_personal_section")
+}
