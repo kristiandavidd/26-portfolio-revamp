@@ -1,9 +1,17 @@
 import Image from "next/image";
+import type { Metadata } from "next";
 import { Check, Sparkles } from "lucide-react";
 import type { PersonalWishlistView } from "@repo/db";
 import { Container } from "@repo/ui";
 import { PageIntro } from "@/components/PageIntro";
 import { getContent } from "@/lib/content";
+
+export const metadata: Metadata = {
+  title: "Wishlist",
+  description:
+    "Things still to do, and the ones already crossed off — the personal list of Kristian David.",
+  alternates: { canonical: "/wishlist" },
+};
 
 function WishlistRow({ item }: { item: PersonalWishlistView }) {
   return (

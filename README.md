@@ -92,6 +92,19 @@ Everything is edited in the panel under **Personal** (Landing, Story, Places,
 Gallery, Wishlist). Story, places, gallery and wishlist are reorderable with the
 arrow buttons; wishlist items are ticked off from the panel.
 
+## Crawlers, SEO and error pages
+
+Both sites publish their own `sitemap.xml` and `robots.txt`, and both allow the
+major assistant crawlers explicitly. The portfolio adds a `/llms.txt` brief and a
+JSON-LD `@graph` (person, site, profile page, Dephilia, selected work); the
+personal side links back to the same person entity instead of declaring a second
+one. Canonicals resolve against `NEXT_PUBLIC_PORTFOLIO_URL` and
+`NEXT_PUBLIC_PERSONAL_URL`.
+
+Each app ships `not-found.tsx` (404), `forbidden.tsx` (403, reached through
+`forbidden()` with `experimental.authInterrupts`) and `error.tsx` (500, with a
+retry button).
+
 ## Email
 
 The panel sends replies and test email through Echo, and mirrors every attempt

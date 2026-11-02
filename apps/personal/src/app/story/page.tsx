@@ -1,7 +1,15 @@
 import Image from "next/image";
+import type { Metadata } from "next";
 import { Container, Reveal } from "@repo/ui";
 import { PageIntro } from "@/components/PageIntro";
 import { getContent } from "@/lib/content";
+
+export const metadata: Metadata = {
+  title: "Story",
+  description:
+    "The long version of how Kristian David got here, told in chronological chapters.",
+  alternates: { canonical: "/story" },
+};
 
 export default async function StoryPage() {
   const { story } = await getContent();

@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { Container } from "@repo/ui";
 import { ProjectHero, ProjectNext } from "@/components/projects/ProjectDetail";
 import { getContent } from "@/lib/content";
+import { SITE_URL } from "@/lib/seo";
 
 type Params = { slug: string };
 
@@ -21,8 +22,13 @@ export async function generateMetadata({
   if (!project) return { title: "Project not found" };
 
   return {
-    title: `${project.name} · ${profile.name}`,
+    // The layout's title template appends the name, so the page only supplies
+    // its own subject.
+    title: project.name,
     description: project.blurb,
+    alternates: {
+      canonical: `/projects/${project.slug}`,
+    },
     openGraph: {
       title: `${project.name} · ${profile.name}`,
       description: project.blurb,
@@ -37,7 +43,7 @@ export default async function ProjectDetailPage({
   params: Promise<Params>;
 }) {
   const { slug } = await params;
-  const { projects } = await getContent();
+  const { projects, settings } = await getContent();
   const index = projects.findIndex((item) => item.slug === slug);
   if (index === -1) notFound();
 
@@ -46,6 +52,25 @@ export default async function ProjectDetailPage({
   const accent = project.accent ?? DEFAULT_ACCENT;
   const position = String(index + 1).padStart(2, "0");
   const total = String(projects.length).padStart(2, "0");
+  const siteUrl = (settings.siteUrl || SITE_URL).replace(/\/$/, "");
+  const personId = `${siteUrl}/#person`;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    name: project.name,
+    description: project.blurb,
+    url: `${siteUrl}/projects/${project.slug}`,
+    creator: { "@id": personId },
+    isPartOf: { "@id": `${siteUrl}/#website` },
+    ...(project.tags.length > 0
+      ? { keywords: project.tags.join(", ") }
+      : {}),
+    ...(project.company
+      ? { sourceOrganization: { "@type": "Organization", name: project.company } }
+      : {}),
+    ...(project.period ? { temporalCoverage: project.period } : {}),
+  };
 
   const facts = [
     { label: "Role", value: project.role },
@@ -58,6 +83,12 @@ export default async function ProjectDetailPage({
       style={{ "--accent": accent } as React.CSSProperties}
       className="page-in relative flex-1 overflow-x-clip bg-black text-white"
     >
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
       <ProjectHero project={project} index={index} total={projects.length} />
 
       <div className="relative border-b border-white/10">

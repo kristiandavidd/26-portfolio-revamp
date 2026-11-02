@@ -1,8 +1,16 @@
 import Image from "next/image";
+import type { Metadata } from "next";
 import { ArrowUpRight, MapPin } from "lucide-react";
 import { Container, Reveal } from "@repo/ui";
 import { PageIntro } from "@/components/PageIntro";
 import { getContent } from "@/lib/content";
+
+export const metadata: Metadata = {
+  title: "Places",
+  description:
+    "Places Kristian David has visited, with the year, a one-line note, and a pin on the map.",
+  alternates: { canonical: "/places" },
+};
 
 export default async function PlacesPage() {
   const { places } = await getContent();

@@ -3,6 +3,10 @@ import { resolve } from "node:path";
 
 const nextConfig: NextConfig = {
   outputFileTracingRoot: resolve(process.cwd(), "../.."),
+  experimental: {
+    // Lets `forbidden()` render the 403 page instead of the generic error.
+    authInterrupts: true,
+  },
   images: {
     remotePatterns: [
       {

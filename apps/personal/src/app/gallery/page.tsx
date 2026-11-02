@@ -1,7 +1,15 @@
+import type { Metadata } from "next";
 import { Container } from "@repo/ui";
 import { GalleryWall } from "@/components/GalleryWall";
 import { PageIntro } from "@/components/PageIntro";
 import { getContent } from "@/lib/content";
+
+export const metadata: Metadata = {
+  title: "Gallery",
+  description:
+    "Photographs from the personal side of Kristian David — places, light, and the moments in between.",
+  alternates: { canonical: "/gallery" },
+};
 
 export default async function GalleryPage() {
   const { gallery } = await getContent();
