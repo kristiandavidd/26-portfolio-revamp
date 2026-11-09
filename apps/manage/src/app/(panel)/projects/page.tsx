@@ -1,20 +1,18 @@
+import Image from "next/image";
 import { prisma } from "@repo/db";
-import {
-  Badge,
-  Checkbox,
-  Field,
-  Input,
-  PageHeader,
-  Select,
-  Textarea,
-} from "@repo/ui";
+import { Button, Field, Input, PageHeader, Textarea } from "@repo/ui";
 import { AssetField, type AssetInfo } from "@/components/panel/AssetField";
-import { AddPanel } from "@/components/panel/AddPanel";
 import { DeleteForm } from "@/components/panel/FormBits";
+import { Modal } from "@/components/panel/Modal";
+import { SelectMenu } from "@/components/panel/SelectMenu";
+import { EmptyRow, TableShell, Td, Th } from "@/components/panel/Table";
+import { Reorder, StatusToggle } from "@/components/panel/RowActions";
 import { getAssetMap } from "@/lib/assets";
 import { deleteProject, saveProject } from "@/lib/actions/content";
 
 export const dynamic = "force-dynamic";
+
+const PATH = "/projects";
 
 type ProjectRecord = {
   id: string;
@@ -30,8 +28,8 @@ type ProjectRecord = {
   summary: string;
   role: string | null;
   periodLabel: string | null;
-  sortOrder: number;
   status: number;
+  company: { name: string } | null;
   features: { content: string }[];
   tags: { tag: { name: string } }[];
 };
@@ -47,39 +45,53 @@ function ProjectForm({
   companies: CompanyOption[];
   assets: Map<string, AssetInfo>;
 }) {
+  const key = project?.id ?? "new";
+
   return (
     <form action={saveProject} className="flex flex-col gap-5">
-      <input type="hidden" name="_path" value="/projects" />
+      <input type="hidden" name="_path" value={PATH} />
       {project ? <input type="hidden" name="id" value={project.id} /> : null}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Name" htmlFor={`name-${project?.id ?? "new"}`}>
+        <Field label="Name" htmlFor={`name-${key}`}>
           <Input
-            id={`name-${project?.id ?? "new"}`}
+            id={`name-${key}`}
             name="name"
             defaultValue={project?.name ?? ""}
             required
           />
         </Field>
-        <Field label="Slug" htmlFor={`slug-${project?.id ?? "new"}`} hint="Used in /projects/[slug].">
+        <Field
+          label="Slug"
+          htmlFor={`slug-${key}`}
+          hint="Generated from the name. It stays fixed after the first save."
+        >
           <Input
-            id={`slug-${project?.id ?? "new"}`}
-            name="slug"
-            defaultValue={project?.slug ?? ""}
-            placeholder="auto from name"
+            id={`slug-${key}`}
+            value={project?.slug ?? "Generated on save"}
+            readOnly
+            disabled
           />
         </Field>
-        <Field label="Blurb" htmlFor={`blurb-${project?.id ?? "new"}`} className="sm:col-span-2">
+        <Field
+          label="Blurb"
+          htmlFor={`blurb-${key}`}
+          className="sm:col-span-2"
+        >
           <Textarea
-            id={`blurb-${project?.id ?? "new"}`}
+            id={`blurb-${key}`}
             name="blurb"
             rows={2}
             defaultValue={project?.blurb ?? ""}
           />
         </Field>
-        <Field label="Summary" htmlFor={`summary-${project?.id ?? "new"}`} className="sm:col-span-2">
+        <Field
+          label="Summary"
+          htmlFor={`summary-${key}`}
+          className="sm:col-span-2"
+        >
           <Textarea
-            id={`summary-${project?.id ?? "new"}`}
+            id={`summary-${key}`}
             name="summary"
             rows={4}
             defaultValue={project?.summary ?? ""}
@@ -88,37 +100,41 @@ function ProjectForm({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Field label="Company" htmlFor={`company-${project?.id ?? "new"}`}>
-          <Select
-            id={`company-${project?.id ?? "new"}`}
+        <Field label="Company" htmlFor={`company-${key}`}>
+          <SelectMenu
+            id={`company-${key}`}
             name="companyId"
             defaultValue={project?.companyId ?? ""}
-          >
-            <option value="">— none —</option>
-            {companies.map((company) => (
-              <option key={company.id} value={company.id}>
-                {company.name}
-              </option>
-            ))}
-          </Select>
+            options={[
+              { value: "", label: "No company" },
+              ...companies.map((company) => ({
+                value: company.id,
+                label: company.name,
+              })),
+            ]}
+          />
         </Field>
-        <Field label="Role" htmlFor={`role-${project?.id ?? "new"}`}>
+        <Field label="Role" htmlFor={`role-${key}`}>
           <Input
-            id={`role-${project?.id ?? "new"}`}
+            id={`role-${key}`}
             name="role"
             defaultValue={project?.role ?? ""}
           />
         </Field>
-        <Field label="Period" htmlFor={`period-${project?.id ?? "new"}`}>
+        <Field label="Period" htmlFor={`period-${key}`}>
           <Input
-            id={`period-${project?.id ?? "new"}`}
+            id={`period-${key}`}
             name="periodLabel"
             defaultValue={project?.periodLabel ?? ""}
           />
         </Field>
-        <Field label="Accent" htmlFor={`accent-${project?.id ?? "new"}`} hint="Hex, e.g. #ff5c1a.">
+        <Field
+          label="Accent"
+          htmlFor={`accent-${key}`}
+          hint="Hex, e.g. #ff5c1a."
+        >
           <Input
-            id={`accent-${project?.id ?? "new"}`}
+            id={`accent-${key}`}
             name="accent"
             defaultValue={project?.accent ?? ""}
           />
@@ -151,50 +167,39 @@ function ProjectForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
           label="Tags"
-          htmlFor={`tags-${project?.id ?? "new"}`}
+          htmlFor={`tags-${key}`}
           hint="Comma separated, e.g. Next.js, TypeScript."
         >
           <Input
-            id={`tags-${project?.id ?? "new"}`}
+            id={`tags-${key}`}
             name="tags"
-            defaultValue={project?.tags.map((entry) => entry.tag.name).join(", ") ?? ""}
-          />
-        </Field>
-        <Field label="Sort order" htmlFor={`order-${project?.id ?? "new"}`}>
-          <Input
-            id={`order-${project?.id ?? "new"}`}
-            name="sortOrder"
-            type="number"
-            defaultValue={project?.sortOrder ?? 0}
+            defaultValue={
+              project?.tags.map((entry) => entry.tag.name).join(", ") ?? ""
+            }
           />
         </Field>
         <Field
           label="Features"
-          htmlFor={`features-${project?.id ?? "new"}`}
+          htmlFor={`features-${key}`}
           hint="One per line. Shown on the case page."
           className="sm:col-span-2"
         >
           <Textarea
-            id={`features-${project?.id ?? "new"}`}
+            id={`features-${key}`}
             name="features"
             rows={8}
-            defaultValue={project?.features.map((feature) => feature.content).join("\n") ?? ""}
+            defaultValue={
+              project?.features.map((feature) => feature.content).join("\n") ??
+              ""
+            }
           />
         </Field>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Checkbox
-          name="status"
-          label="Visible on the site"
-          defaultChecked={project ? project.status === 1 : true}
-        />
-        <button
-          type="submit"
-          className="inline-flex h-9 items-center rounded-full bg-brand px-4 text-sm font-medium text-white transition-colors hover:bg-brand-dark"
-        >
+      <div className="flex justify-end">
+        <Button type="submit">
           {project ? "Save project" : "Create project"}
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -203,69 +208,142 @@ function ProjectForm({
 export default async function ProjectsPage() {
   const [projects, companies, assets] = await Promise.all([
     prisma.project.findMany({
-      orderBy: { sortOrder: "asc" },
+      where: { deletedAt: null },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
       include: {
+        company: { select: { name: true } },
         features: { orderBy: { sortOrder: "asc" } },
         tags: { include: { tag: true } },
       },
     }),
-    prisma.company.findMany({ where: { status: 1 }, orderBy: { sortOrder: "asc" } }),
+    prisma.company.findMany({
+      where: { deletedAt: null, status: 1 },
+      orderBy: { sortOrder: "asc" },
+      select: { id: true, name: true },
+    }),
     getAssetMap(),
   ]);
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow="Content"
+        eyebrow="Professional"
         title="Projects"
-        description="Everything on the project wall and its case page."
-      />
-      <AddPanel
-        title="New project"
-        description="Add a case to the wall. Upload artwork straight into each slot."
-        trailing={<Badge>{projects.length} total</Badge>}
-      >
-        <ProjectForm companies={companies} assets={assets} />
-      </AddPanel>
-
-      <div className="flex flex-col gap-3">
-        {projects.map((project) => (
-          <details
-            key={project.id}
-            className="group rounded-xl border border-line bg-white"
+        description="Everything on the project wall and its case page. Slugs are generated, never typed."
+        actions={
+          <Modal
+            triggerLabel="New project"
+            triggerVariant="primary"
+            triggerSize="md"
+            title="New project"
+            description="Add a case to the wall. Upload artwork straight into each slot."
+            wide
           >
-            <summary className="flex cursor-pointer items-center justify-between gap-3 px-5 py-4">
-              <span className="flex min-w-0 items-center gap-3">
-                <span className="truncate text-sm font-medium text-ink">
-                  {project.name}
-                </span>
-                <span className="font-mono text-[10px] tracking-[0.12em] text-muted/70 uppercase">
-                  /{project.slug}
-                </span>
-              </span>
-              <Badge tone={project.status === 1 ? "success" : "neutral"}>
-                {project.status === 1 ? "Live" : "Hidden"}
-              </Badge>
-            </summary>
+            <ProjectForm companies={companies} assets={assets} />
+          </Modal>
+        }
+      />
 
-            <div className="border-t border-line/70 px-5 py-5">
-              <ProjectForm
-                project={project}
-                companies={companies}
-                assets={assets}
-              />
-              <div className="mt-5 border-t border-line/70 pt-4">
-                <DeleteForm
-                  action={deleteProject}
-                  id={project.id}
-                  path="/projects"
-                  confirm={`Delete ${project.name}?`}
-                />
-              </div>
-            </div>
-          </details>
-        ))}
-      </div>
+      <TableShell>
+        <thead>
+          <tr>
+            <Th className="w-12 pl-5">#</Th>
+            <Th>Project</Th>
+            <Th>Company</Th>
+            <Th>Role</Th>
+            <Th>Status</Th>
+            <Th className="pr-5 text-right">Actions</Th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-line/70">
+          {projects.length === 0 ? (
+            <EmptyRow>No projects yet.</EmptyRow>
+          ) : null}
+
+          {projects.map((project, index) => {
+            const logo = project.logoAssetId
+              ? assets.get(project.logoAssetId)
+              : undefined;
+
+            return (
+              <tr key={project.id}>
+                <Td className="pl-5 font-mono text-[10px] text-muted">
+                  {String(index + 1).padStart(2, "0")}
+                </Td>
+                <Td>
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-line bg-surface">
+                      {logo ? (
+                        <Image
+                          src={logo.url}
+                          alt=""
+                          width={36}
+                          height={36}
+                          unoptimized
+                          className="h-full w-full object-contain"
+                        />
+                      ) : (
+                        <span className="font-mono text-[9px] text-muted">
+                          {project.name.slice(0, 2).toUpperCase()}
+                        </span>
+                      )}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate font-medium text-ink">
+                        {project.name}
+                      </span>
+                      <span className="block truncate font-mono text-[10px] text-muted">
+                        /{project.slug}
+                      </span>
+                    </span>
+                  </div>
+                </Td>
+                <Td className="text-ink/75">
+                  {project.company?.name ?? "—"}
+                </Td>
+                <Td className="text-ink/75">{project.role || "—"}</Td>
+                <Td>
+                  <StatusToggle
+                    entity="project"
+                    id={project.id}
+                    status={project.status}
+                    path={PATH}
+                  />
+                </Td>
+                <Td className="pr-5">
+                  <div className="flex items-center justify-end gap-1.5">
+                    <Reorder
+                      entity="project"
+                      id={project.id}
+                      path={PATH}
+                      first={index === 0}
+                      last={index === projects.length - 1}
+                    />
+                    <Modal
+                      triggerLabel="Edit"
+                      title="Edit project"
+                      description={project.name}
+                      wide
+                    >
+                      <ProjectForm
+                        project={project}
+                        companies={companies}
+                        assets={assets}
+                      />
+                    </Modal>
+                    <DeleteForm
+                      action={deleteProject}
+                      id={project.id}
+                      path={PATH}
+                      confirm={`Delete ${project.name}?`}
+                    />
+                  </div>
+                </Td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </TableShell>
     </div>
   );
 }

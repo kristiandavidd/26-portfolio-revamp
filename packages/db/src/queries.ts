@@ -96,27 +96,27 @@ export async function getSiteContent(): Promise<SiteContent> {
   ] = await Promise.all([
     prisma.profile.findUnique({ where: { id: 1 }, include: profileInclude }),
     prisma.experience.findMany({
-      where: { status: 1 },
+      where: { status: 1, deletedAt: null },
       orderBy: { sortOrder: "asc" },
       include: experienceInclude,
     }),
     prisma.project.findMany({
-      where: { status: 1 },
+      where: { status: 1, deletedAt: null },
       orderBy: { sortOrder: "asc" },
       include: projectInclude,
     }),
     prisma.dephiliaProduct.findMany({
-      where: { status: 1 },
+      where: { status: 1, deletedAt: null },
       orderBy: { sortOrder: "asc" },
       include: { iconAsset: assetRef, backgroundAsset: assetRef },
     }),
     prisma.certification.findMany({
-      where: { status: 1 },
+      where: { status: 1, deletedAt: null },
       orderBy: { sortOrder: "asc" },
       include: { logoAsset: assetRef },
     }),
     prisma.communityRole.findMany({
-      where: { status: 1 },
+      where: { status: 1, deletedAt: null },
       orderBy: { sortOrder: "asc" },
     }),
     prisma.education.findUnique({ where: { id: 1 } }),
@@ -230,23 +230,34 @@ export async function getPersonalContent(): Promise<PersonalContent> {
       where: { id: 1 },
       include: { portraitAsset: personalImage },
     }),
-    prisma.personalStory.findMany({
-      where: { status: 1 },
+    prisma.personalChapter.findMany({
+      where: { status: 1, deletedAt: null },
       orderBy: { sortOrder: "asc" },
-      include: { imageAsset: personalImage },
+      include: {
+        subchapters: {
+          where: { status: 1, deletedAt: null },
+          orderBy: { sortOrder: "asc" },
+          include: {
+            paragraphs: {
+              where: { deletedAt: null },
+              orderBy: { sortOrder: "asc" },
+            },
+          },
+        },
+      },
     }),
     prisma.personalPlace.findMany({
-      where: { status: 1 },
+      where: { status: 1, deletedAt: null },
       orderBy: { sortOrder: "asc" },
       include: { imageAsset: personalImage },
     }),
     prisma.personalGalleryItem.findMany({
-      where: { status: 1 },
+      where: { status: 1, deletedAt: null },
       orderBy: { sortOrder: "asc" },
       include: { imageAsset: personalImage },
     }),
     prisma.personalWishlistItem.findMany({
-      where: { status: 1 },
+      where: { status: 1, deletedAt: null },
       orderBy: { sortOrder: "asc" },
       include: { imageAsset: personalImage },
     }),
@@ -261,12 +272,18 @@ export async function getPersonalContent(): Promise<PersonalContent> {
       email: profile?.email ?? "",
       portrait: toPersonalImage(profile?.portraitAsset ?? null),
     },
-    story: story.map((row) => ({
-      id: row.id,
-      period: row.periodLabel,
-      title: row.title,
-      body: row.body,
-      image: toPersonalImage(row.imageAsset),
+    story: story.map((chapter) => ({
+      id: chapter.id,
+      year: chapter.year,
+      title: chapter.title,
+      subchapters: chapter.subchapters.map((subchapter) => ({
+        id: subchapter.id,
+        title: subchapter.title,
+        paragraphs: subchapter.paragraphs.map((paragraph) => ({
+          id: paragraph.id,
+          body: paragraph.body,
+        })),
+      })),
     })),
     places: places.map((row) => ({
       id: row.id,

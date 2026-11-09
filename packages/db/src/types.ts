@@ -134,12 +134,22 @@ export type PersonalProfileView = {
   portrait: PersonalImageView | null;
 };
 
-export type PersonalStoryView = {
+export type PersonalParagraphView = {
   id: string;
-  period: string;
-  title: string;
   body: string;
-  image: PersonalImageView | null;
+};
+
+export type PersonalSubchapterView = {
+  id: string;
+  title: string;
+  paragraphs: PersonalParagraphView[];
+};
+
+export type PersonalChapterView = {
+  id: string;
+  year: string;
+  title: string;
+  subchapters: PersonalSubchapterView[];
 };
 
 export type PersonalPlaceView = {
@@ -170,7 +180,7 @@ export type PersonalWishlistView = {
 
 export type PersonalContent = {
   profile: PersonalProfileView;
-  story: PersonalStoryView[];
+  story: PersonalChapterView[];
   places: PersonalPlaceView[];
   gallery: PersonalGalleryView[];
   wishlist: PersonalWishlistView[];

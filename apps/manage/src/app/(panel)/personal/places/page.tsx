@@ -1,16 +1,11 @@
+import Image from "next/image";
 import { prisma } from "@repo/db";
-import {
-  Badge,
-  Checkbox,
-  Field,
-  Input,
-  PageHeader,
-  Textarea,
-} from "@repo/ui";
-import { AddPanel } from "@/components/panel/AddPanel";
+import { Button, Field, Input, PageHeader, Textarea } from "@repo/ui";
 import { AssetField, type AssetInfo } from "@/components/panel/AssetField";
 import { DeleteForm } from "@/components/panel/FormBits";
-import { Reorder } from "@/components/panel/PersonalControls";
+import { Modal } from "@/components/panel/Modal";
+import { EmptyRow, TableShell, Td, Th } from "@/components/panel/Table";
+import { Reorder, StatusToggle } from "@/components/panel/RowActions";
 import { getAssetMap } from "@/lib/assets";
 import { deletePersonalPlace, savePersonalPlace } from "@/lib/actions/personal";
 
@@ -39,7 +34,7 @@ function PlaceForm({
   const key = place?.id ?? "new";
 
   return (
-    <form action={savePersonalPlace} className="flex flex-col gap-4">
+    <form action={savePersonalPlace} className="flex flex-col gap-5">
       <input type="hidden" name="_path" value={PATH} />
       {place ? <input type="hidden" name="id" value={place.id} /> : null}
 
@@ -105,18 +100,10 @@ function PlaceForm({
         />
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Checkbox
-          name="status"
-          label="Visible on the personal site"
-          defaultChecked={place ? place.status === 1 : true}
-        />
-        <button
-          type="submit"
-          className="inline-flex h-9 items-center rounded-full bg-brand px-4 text-sm font-medium text-white transition-colors hover:bg-brand-dark"
-        >
+      <div className="flex justify-end">
+        <Button type="submit">
           {place ? "Save place" : "Add place"}
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -125,6 +112,7 @@ function PlaceForm({
 export default async function PersonalPlacesPage() {
   const [places, assets] = await Promise.all([
     prisma.personalPlace.findMany({
+      where: { deletedAt: null },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     }),
     getAssetMap(),
@@ -136,69 +124,116 @@ export default async function PersonalPlacesPage() {
         eyebrow="Personal"
         title="Places"
         description="Places you have been to: a photograph, the year, one line about it, and a map link."
+        actions={
+          <Modal
+            triggerLabel="New place"
+            triggerVariant="primary"
+            triggerSize="md"
+            title="New place"
+            description="The grid follows table order."
+          >
+            <PlaceForm assets={assets} />
+          </Modal>
+        }
       />
 
-      <AddPanel
-        title="Add a place"
-        description="The grid follows this order. Use the arrows to reorder."
-      >
-        <PlaceForm assets={assets} />
-      </AddPanel>
+      <TableShell>
+        <thead>
+          <tr>
+            <Th className="w-12 pl-5">#</Th>
+            <Th>Place</Th>
+            <Th>Region</Th>
+            <Th>Year</Th>
+            <Th>Map</Th>
+            <Th>Status</Th>
+            <Th className="pr-5 text-right">Actions</Th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-line/70">
+          {places.length === 0 ? (
+            <EmptyRow>No places yet.</EmptyRow>
+          ) : null}
 
-      {places.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-line px-6 py-12 text-center text-sm text-muted">
-          No places yet. Add the first one above.
-        </p>
-      ) : null}
+          {places.map((place, index) => {
+            const image = place.imageAssetId
+              ? assets.get(place.imageAssetId)
+              : undefined;
 
-      <div className="flex flex-col gap-3">
-        {places.map((place, index) => (
-          <details
-            key={place.id}
-            className="rounded-xl border border-line bg-white"
-          >
-            <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-3 px-5 py-4">
-              <span className="flex min-w-0 items-center gap-3">
-                <span className="shrink-0 font-mono text-[10px] tracking-[0.12em] text-brand uppercase">
+            return (
+              <tr key={place.id}>
+                <Td className="pl-5 font-mono text-[10px] text-muted">
+                  {String(index + 1).padStart(2, "0")}
+                </Td>
+                <Td>
+                  <div className="flex items-center gap-3">
+                    <span className="relative h-9 w-12 shrink-0 overflow-hidden rounded-lg border border-line bg-sand">
+                      {image ? (
+                        <Image
+                          src={image.url}
+                          alt=""
+                          fill
+                          unoptimized
+                          sizes="48px"
+                          className="object-cover"
+                        />
+                      ) : null}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate font-medium text-ink">
+                        {place.name}
+                      </span>
+                      {place.note ? (
+                        <span className="block max-w-[16rem] truncate text-xs text-muted">
+                          {place.note}
+                        </span>
+                      ) : null}
+                    </span>
+                  </div>
+                </Td>
+                <Td className="text-ink/75">{place.region || "—"}</Td>
+                <Td className="font-mono text-[11px] text-muted">
                   {place.year || "—"}
-                </span>
-                <span className="truncate text-sm font-medium text-ink">
-                  {place.name}
-                </span>
-                {place.region ? (
-                  <span className="truncate text-xs text-muted">
-                    {place.region}
-                  </span>
-                ) : null}
-              </span>
-              <span className="flex items-center gap-2">
-                <Badge tone={place.status === 1 ? "success" : "neutral"}>
-                  {place.status === 1 ? "Visible" : "Hidden"}
-                </Badge>
-                <Reorder
-                  entity="place"
-                  id={place.id}
-                  path={PATH}
-                  first={index === 0}
-                  last={index === places.length - 1}
-                />
-              </span>
-            </summary>
-
-            <div className="border-t border-line/70 px-5 py-5">
-              <PlaceForm place={place} assets={assets} />
-              <div className="mt-5 border-t border-line/70 pt-4">
-                <DeleteForm
-                  action={deletePersonalPlace}
-                  id={place.id}
-                  path={PATH}
-                  confirm={`Delete "${place.name}"?`}
-                />
-              </div>
-            </div>
-          </details>
-        ))}
-      </div>
+                </Td>
+                <Td className="font-mono text-[10px] text-muted">
+                  {place.mapsUrl ? "Linked" : "—"}
+                </Td>
+                <Td>
+                  <StatusToggle
+                    entity="place"
+                    id={place.id}
+                    status={place.status}
+                    path={PATH}
+                  />
+                </Td>
+                <Td className="pr-5">
+                  <div className="flex items-center justify-end gap-1.5">
+                    <Reorder
+                      entity="place"
+                      id={place.id}
+                      path={PATH}
+                      first={index === 0}
+                      last={index === places.length - 1}
+                    />
+                    <Modal
+                      triggerLabel="Edit"
+                      title="Edit place"
+                      description={place.name}
+                    >
+                      <PlaceForm place={place} assets={assets} />
+                    </Modal>
+                    <DeleteForm
+                      action={deletePersonalPlace}
+                      id={place.id}
+                      path={PATH}
+                      confirm={`Delete "${place.name}"?`}
+                    />
+                  </div>
+                </Td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </TableShell>
     </div>
   );
 }

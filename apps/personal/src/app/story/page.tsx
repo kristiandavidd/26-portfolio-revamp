@@ -1,4 +1,3 @@
-import Image from "next/image";
 import type { Metadata } from "next";
 import { Container, Reveal } from "@repo/ui";
 import { PageIntro } from "@/components/PageIntro";
@@ -36,39 +35,44 @@ export default async function StoryPage() {
           </p>
         ) : (
           <Reveal>
-            <ol className="mt-16 flex flex-col gap-14 border-l border-line pl-6 sm:pl-10">
-              {story.map((card) => (
-                <li key={card.id} className="relative">
+            <ol className="mt-16 flex flex-col gap-20 border-l border-line pl-6 sm:pl-10">
+              {story.map((chapter) => (
+                <li key={chapter.id} className="relative">
                   <span
                     aria-hidden
                     className="absolute top-2 -left-[29px] h-2.5 w-2.5 rounded-full bg-violet ring-4 ring-white sm:-left-[45px]"
                   />
 
                   <p className="font-mono text-[10px] tracking-[0.24em] text-violet uppercase">
-                    {card.period || "Undated"}
+                    {chapter.year || "Undated"}
                   </p>
-                  <h2 className="font-display mt-3 text-3xl leading-tight text-balance sm:text-4xl">
-                    {card.title}
-                  </h2>
 
-                  {card.image ? (
-                    <div className="relative mt-6 aspect-[16/9] overflow-hidden rounded-2xl bg-sand">
-                      <Image
-                        src={card.image.url}
-                        alt={card.title}
-                        fill
-                        unoptimized
-                        sizes="(min-width: 1024px) 60vw, 100vw"
-                        className="object-cover"
-                      />
-                    </div>
+                  {chapter.title ? (
+                    <h2 className="font-display mt-3 text-4xl leading-tight text-balance sm:text-5xl">
+                      {chapter.title}
+                    </h2>
                   ) : null}
 
-                  {card.body ? (
-                    <p className="mt-6 max-w-2xl text-sm leading-relaxed whitespace-pre-line text-black/70 sm:text-base">
-                      {card.body}
-                    </p>
-                  ) : null}
+                  <div className="mt-10 flex max-w-2xl flex-col gap-10">
+                    {chapter.subchapters.map((subchapter) => (
+                      <section key={subchapter.id}>
+                        <h3 className="font-display text-2xl leading-tight text-balance">
+                          {subchapter.title}
+                        </h3>
+
+                        <div className="mt-4 flex flex-col gap-4">
+                          {subchapter.paragraphs.map((paragraph) => (
+                            <p
+                              key={paragraph.id}
+                              className="text-sm leading-relaxed whitespace-pre-line text-black/70 sm:text-base"
+                            >
+                              {paragraph.body}
+                            </p>
+                          ))}
+                        </div>
+                      </section>
+                    ))}
+                  </div>
                 </li>
               ))}
             </ol>

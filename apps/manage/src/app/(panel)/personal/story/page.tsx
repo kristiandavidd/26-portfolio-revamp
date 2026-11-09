@@ -1,176 +1,138 @@
+import Link from "next/link";
 import { prisma } from "@repo/db";
-import {
-  Badge,
-  Checkbox,
-  Field,
-  Input,
-  PageHeader,
-  Textarea,
-} from "@repo/ui";
-import { AddPanel } from "@/components/panel/AddPanel";
-import { AssetField, type AssetInfo } from "@/components/panel/AssetField";
+import { Button, Field, Input, PageHeader } from "@repo/ui";
 import { DeleteForm } from "@/components/panel/FormBits";
-import { Reorder } from "@/components/panel/PersonalControls";
-import { getAssetMap } from "@/lib/assets";
-import { deletePersonalStory, savePersonalStory } from "@/lib/actions/personal";
+import { Modal } from "@/components/panel/Modal";
+import { EmptyRow, TableShell, Td, Th } from "@/components/panel/Table";
+import { Reorder, StatusToggle } from "@/components/panel/RowActions";
+import { deleteChapter, saveChapter } from "@/lib/actions/personal";
 
 export const dynamic = "force-dynamic";
 
 const PATH = "/personal/story";
 
-type StoryRecord = {
-  id: string;
-  periodLabel: string;
-  title: string;
-  body: string;
-  imageAssetId: string | null;
-  status: number;
-};
-
-function StoryForm({
-  story,
-  assets,
-}: {
-  story?: StoryRecord;
-  assets: Map<string, AssetInfo>;
-}) {
-  const key = story?.id ?? "new";
-
+function ChapterForm() {
   return (
-    <form action={savePersonalStory} className="flex flex-col gap-4">
+    <form action={saveChapter} className="flex flex-col gap-5">
       <input type="hidden" name="_path" value={PATH} />
-      {story ? <input type="hidden" name="id" value={story.id} /> : null}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field
-          label="Period"
-          htmlFor={`period-${key}`}
-          hint="Sits on the timeline rail, e.g. 2019 or Spring 2021."
-        >
-          <Input
-            id={`period-${key}`}
-            name="periodLabel"
-            defaultValue={story?.periodLabel ?? ""}
-          />
-        </Field>
-        <Field label="Title" htmlFor={`title-${key}`}>
-          <Input
-            id={`title-${key}`}
-            name="title"
-            defaultValue={story?.title ?? ""}
-            required
-          />
+        <Field label="Year" htmlFor="chapter-year">
+          <Input id="chapter-year" name="year" placeholder="2003" required />
         </Field>
         <Field
-          label="Story"
-          htmlFor={`body-${key}`}
-          className="sm:col-span-2"
-          hint="One or two paragraphs. Blank lines are kept."
+          label="Chapter title"
+          htmlFor="chapter-title"
+          hint="Optional. The year is enough if you prefer."
         >
-          <Textarea
-            id={`body-${key}`}
-            name="body"
-            rows={6}
-            defaultValue={story?.body ?? ""}
-          />
+          <Input id="chapter-title" name="title" placeholder="The early years" />
         </Field>
-        <AssetField
-          label="Image"
-          name="imageAssetId"
-          asset={assets.get(story?.imageAssetId ?? "") ?? null}
-          hint="Optional. Shown beside the text."
-        />
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Checkbox
-          name="status"
-          label="Visible on the personal site"
-          defaultChecked={story ? story.status === 1 : true}
-        />
-        <button
-          type="submit"
-          className="inline-flex h-9 items-center rounded-full bg-brand px-4 text-sm font-medium text-white transition-colors hover:bg-brand-dark"
-        >
-          {story ? "Save card" : "Add card"}
-        </button>
+      <div className="flex justify-end">
+        <Button type="submit">Add chapter</Button>
       </div>
     </form>
   );
 }
 
 export default async function PersonalStoryPage() {
-  const [stories, assets] = await Promise.all([
-    prisma.personalStory.findMany({
-      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-    }),
-    getAssetMap(),
-  ]);
+  const chapters = await prisma.personalChapter.findMany({
+    where: { deletedAt: null },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    include: {
+      _count: {
+        select: {
+          subchapters: { where: { deletedAt: null } },
+        },
+      },
+    },
+  });
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         eyebrow="Personal"
         title="Story"
-        description="The personal timeline, told in cards: one period, a title, and one or two paragraphs."
+        description="The timeline is grouped by chapter. Open a chapter to write its subchapters and paragraphs."
+        actions={
+          <Modal
+            triggerLabel="New chapter"
+            triggerVariant="primary"
+            triggerSize="md"
+            title="New chapter"
+            description="A chapter is one period of the story. Subchapters live inside it."
+          >
+            <ChapterForm />
+          </Modal>
+        }
       />
 
-      <AddPanel
-        title="Add a story card"
-        description="Cards appear in this order on the public timeline. Use the arrows to reorder."
-      >
-        <StoryForm assets={assets} />
-      </AddPanel>
+      <TableShell>
+        <thead>
+          <tr>
+            <Th className="w-12 pl-5">#</Th>
+            <Th>Year</Th>
+            <Th>Chapter</Th>
+            <Th>Subchapters</Th>
+            <Th>Status</Th>
+            <Th className="pr-5 text-right">Actions</Th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-line/70">
+          {chapters.length === 0 ? (
+            <EmptyRow>No chapters yet.</EmptyRow>
+          ) : null}
 
-      {stories.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-line px-6 py-12 text-center text-sm text-muted">
-          No story cards yet. Add the first one above.
-        </p>
-      ) : null}
-
-      <div className="flex flex-col gap-3">
-        {stories.map((story, index) => (
-          <details
-            key={story.id}
-            className="rounded-xl border border-line bg-white"
-          >
-            <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-3 px-5 py-4">
-              <span className="flex min-w-0 items-center gap-3">
-                <span className="shrink-0 font-mono text-[10px] tracking-[0.12em] text-brand uppercase">
-                  {story.periodLabel || "—"}
-                </span>
-                <span className="truncate text-sm font-medium text-ink">
-                  {story.title}
-                </span>
-              </span>
-              <span className="flex items-center gap-2">
-                <Badge tone={story.status === 1 ? "success" : "neutral"}>
-                  {story.status === 1 ? "Visible" : "Hidden"}
-                </Badge>
-                <Reorder
-                  entity="story"
-                  id={story.id}
+          {chapters.map((chapter, index) => (
+            <tr key={chapter.id}>
+              <Td className="pl-5 font-mono text-[10px] text-muted">
+                {String(index + 1).padStart(2, "0")}
+              </Td>
+              <Td className="font-mono text-[10px] tracking-[0.12em] whitespace-nowrap text-brand uppercase">
+                {chapter.year || "—"}
+              </Td>
+              <Td className="font-medium text-ink">
+                {chapter.title || "Untitled chapter"}
+              </Td>
+              <Td className="font-mono text-[10px] tracking-[0.08em] text-muted uppercase">
+                {chapter._count.subchapters}
+              </Td>
+              <Td>
+                <StatusToggle
+                  entity="chapter"
+                  id={chapter.id}
+                  status={chapter.status}
                   path={PATH}
-                  first={index === 0}
-                  last={index === stories.length - 1}
                 />
-              </span>
-            </summary>
-
-            <div className="border-t border-line/70 px-5 py-5">
-              <StoryForm story={story} assets={assets} />
-              <div className="mt-5 border-t border-line/70 pt-4">
-                <DeleteForm
-                  action={deletePersonalStory}
-                  id={story.id}
-                  path={PATH}
-                  confirm={`Delete the story card "${story.title}"?`}
-                />
-              </div>
-            </div>
-          </details>
-        ))}
-      </div>
+              </Td>
+              <Td className="pr-5">
+                <div className="flex items-center justify-end gap-1.5">
+                  <Link
+                    href={`${PATH}/${chapter.id}`}
+                    className="inline-flex h-8 items-center rounded-full border border-line bg-surface px-3 text-xs font-medium text-ink transition-colors hover:border-brand/40 hover:bg-sand"
+                  >
+                    Open
+                  </Link>
+                  <Reorder
+                    entity="chapter"
+                    id={chapter.id}
+                    path={PATH}
+                    first={index === 0}
+                    last={index === chapters.length - 1}
+                  />
+                  <DeleteForm
+                    action={deleteChapter}
+                    id={chapter.id}
+                    path={PATH}
+                    confirm={`Delete the ${chapter.year || "undated"} chapter and its subchapters?`}
+                  />
+                </div>
+              </Td>
+            </tr>
+          ))}
+        </tbody>
+      </TableShell>
     </div>
   );
 }

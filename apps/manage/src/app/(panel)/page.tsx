@@ -27,9 +27,9 @@ async function loadOverview() {
     recentMessages,
     recentProjects,
   ] = await Promise.all([
-    prisma.project.count({ where: { status: 1 } }),
-    prisma.experience.count({ where: { status: 1 } }),
-    prisma.dephiliaProduct.count({ where: { status: 1 } }),
+    prisma.project.count({ where: { status: 1, deletedAt: null } }),
+    prisma.experience.count({ where: { status: 1, deletedAt: null } }),
+    prisma.dephiliaProduct.count({ where: { status: 1, deletedAt: null } }),
     prisma.contactMessage.count({ where: { status: "new" } }),
     prisma.contactMessage.count(),
     prisma.contactMessage.findMany({
@@ -37,6 +37,7 @@ async function loadOverview() {
       take: 4,
     }),
     prisma.project.findMany({
+      where: { deletedAt: null },
       orderBy: { sortOrder: "asc" },
       take: 4,
       select: { id: true, name: true, slug: true, status: true },

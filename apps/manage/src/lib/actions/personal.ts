@@ -1,17 +1,11 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { prisma } from "@repo/db";
 import { requireSession } from "@/lib/auth";
-import {
-  releaseAsset,
-  releaseReplacedAssets,
-  resolveAssetField,
-} from "@/lib/assets";
+import { releaseReplacedAssets, resolveAssetField } from "@/lib/assets";
+import { archiveEntity, nextSortOrder } from "@/lib/entities";
 import {
   checkbox,
-  currentPath,
   errorMessage,
   fail,
   finish,
@@ -71,82 +65,141 @@ export async function savePersonalProfile(formData: FormData) {
 }
 
 // ---------------------------------------------------------------------------
-// Story
+// Story: chapter -> subchapter -> paragraph
 // ---------------------------------------------------------------------------
 
-export async function savePersonalStory(formData: FormData) {
+export async function saveChapter(formData: FormData) {
   await requireSession();
 
   const id = text(formData, "id");
+  const year = text(formData, "year");
   const title = text(formData, "title");
 
-  if (!title) {
-    return fail(formData, "A story card needs a title.");
+  if (!year) {
+    return fail(formData, "A chapter needs a year.");
   }
 
-  const before = id
-    ? await prisma.personalStory.findUnique({
-        where: { id },
-        select: { imageAssetId: true },
-      })
-    : null;
-
-  let keptAsset: string | null = null;
+  const data = { year, title };
 
   try {
-    const data = {
-      periodLabel: text(formData, "periodLabel"),
-      title,
-      body: text(formData, "body"),
-      imageAssetId: await resolveAssetField(
-        formData,
-        "imageAssetId",
-        "personal/story",
-      ),
-      status: checkbox(formData, "status") ? 1 : 0,
-    };
-
     if (id) {
-      await prisma.personalStory.update({ where: { id }, data });
+      await prisma.personalChapter.update({ where: { id }, data });
     } else {
-      const last = await prisma.personalStory.aggregate({
-        _max: { sortOrder: true },
-      });
-      await prisma.personalStory.create({
-        data: { ...data, sortOrder: (last._max.sortOrder ?? -1) + 1 },
+      await prisma.personalChapter.create({
+        data: {
+          ...data,
+          status: 1,
+          sortOrder: await nextSortOrder("chapter"),
+        },
       });
     }
-
-    keptAsset = data.imageAssetId;
   } catch (error) {
     return fail(formData, errorMessage(error));
   }
 
-  if (before) {
-    await releaseReplacedAssets([before.imageAssetId], [keptAsset]);
-  }
-
-  await finish(formData, id ? "Story card updated." : "Story card added.");
+  await finish(formData, id ? "Chapter updated." : "Chapter created.");
 }
 
-export async function deletePersonalStory(formData: FormData) {
+export async function deleteChapter(formData: FormData) {
   await requireSession();
-  const id = text(formData, "id");
-
-  const before = await prisma.personalStory.findUnique({
-    where: { id },
-    select: { imageAssetId: true },
-  });
 
   try {
-    await prisma.personalStory.delete({ where: { id } });
+    await archiveEntity("chapter", text(formData, "id"));
   } catch (error) {
     return fail(formData, errorMessage(error));
   }
 
-  await releaseAsset(before?.imageAssetId);
+  await finish(formData, "Chapter deleted.");
+}
 
-  await finish(formData, "Story card deleted.");
+export async function saveSubchapter(formData: FormData) {
+  await requireSession();
+
+  const id = text(formData, "id");
+  const chapterId = text(formData, "chapterId");
+  const title = text(formData, "title");
+
+  if (!chapterId || !title) {
+    return fail(formData, "A subchapter needs a chapter and a title.");
+  }
+
+  const data = { title };
+
+  try {
+    if (id) {
+      await prisma.personalSubchapter.update({ where: { id }, data });
+    } else {
+      await prisma.personalSubchapter.create({
+        data: {
+          ...data,
+          chapterId,
+          status: 1,
+          sortOrder: await nextSortOrder("subchapter", chapterId),
+        },
+      });
+    }
+  } catch (error) {
+    return fail(formData, errorMessage(error));
+  }
+
+  await finish(formData, id ? "Subchapter updated." : "Subchapter created.");
+}
+
+export async function deleteSubchapter(formData: FormData) {
+  await requireSession();
+
+  try {
+    await archiveEntity("subchapter", text(formData, "id"));
+  } catch (error) {
+    return fail(formData, errorMessage(error));
+  }
+
+  await finish(formData, "Subchapter deleted.");
+}
+
+export async function saveParagraph(formData: FormData) {
+  await requireSession();
+
+  const id = text(formData, "id");
+  const subchapterId = text(formData, "subchapterId");
+  const body = text(formData, "body");
+
+  if (!subchapterId || !body) {
+    return fail(formData, "A paragraph needs a subchapter and text.");
+  }
+
+  try {
+    if (id) {
+      await prisma.personalParagraph.update({
+        where: { id },
+        data: { body },
+      });
+    } else {
+      await prisma.personalParagraph.create({
+        data: {
+          subchapterId,
+          body,
+          sortOrder: await nextSortOrder("paragraph", subchapterId),
+        },
+      });
+    }
+  } catch (error) {
+    return fail(formData, errorMessage(error));
+  }
+
+  await finish(formData, id ? "Paragraph updated." : "Paragraph added.");
+}
+
+export async function deleteParagraph(formData: FormData) {
+  await requireSession();
+
+  try {
+    await archiveEntity("paragraph", text(formData, "id"));
+  } catch (error) {
+    return fail(formData, errorMessage(error));
+  }
+
+  await finish(formData, "Paragraph deleted.");
 }
 
 // ---------------------------------------------------------------------------
@@ -165,9 +218,9 @@ export async function savePersonalPlace(formData: FormData) {
 
   const before = id
     ? await prisma.personalPlace.findUnique({
-        where: { id },
-        select: { imageAssetId: true },
-      })
+      where: { id },
+      select: { imageAssetId: true },
+    })
     : null;
 
   let keptAsset: string | null = null;
@@ -184,17 +237,17 @@ export async function savePersonalPlace(formData: FormData) {
         "imageAssetId",
         "personal/places",
       ),
-      status: checkbox(formData, "status") ? 1 : 0,
     };
 
     if (id) {
       await prisma.personalPlace.update({ where: { id }, data });
     } else {
-      const last = await prisma.personalPlace.aggregate({
-        _max: { sortOrder: true },
-      });
       await prisma.personalPlace.create({
-        data: { ...data, sortOrder: (last._max.sortOrder ?? -1) + 1 },
+        data: {
+          ...data,
+          status: 1,
+          sortOrder: await nextSortOrder("place"),
+        },
       });
     }
 
@@ -212,20 +265,12 @@ export async function savePersonalPlace(formData: FormData) {
 
 export async function deletePersonalPlace(formData: FormData) {
   await requireSession();
-  const id = text(formData, "id");
-
-  const before = await prisma.personalPlace.findUnique({
-    where: { id },
-    select: { imageAssetId: true },
-  });
 
   try {
-    await prisma.personalPlace.delete({ where: { id } });
+    await archiveEntity("place", text(formData, "id"));
   } catch (error) {
     return fail(formData, errorMessage(error));
   }
-
-  await releaseAsset(before?.imageAssetId);
 
   await finish(formData, "Place deleted.");
 }
@@ -242,9 +287,9 @@ export async function savePersonalGalleryItem(formData: FormData) {
 
   const before = id
     ? await prisma.personalGalleryItem.findUnique({
-        where: { id },
-        select: { imageAssetId: true },
-      })
+      where: { id },
+      select: { imageAssetId: true },
+    })
     : null;
 
   let keptAsset: string | null = null;
@@ -259,17 +304,17 @@ export async function savePersonalGalleryItem(formData: FormData) {
         "imageAssetId",
         "personal/gallery",
       ),
-      status: checkbox(formData, "status") ? 1 : 0,
     };
 
     if (id) {
       await prisma.personalGalleryItem.update({ where: { id }, data });
     } else {
-      const last = await prisma.personalGalleryItem.aggregate({
-        _max: { sortOrder: true },
-      });
       await prisma.personalGalleryItem.create({
-        data: { ...data, sortOrder: (last._max.sortOrder ?? -1) + 1 },
+        data: {
+          ...data,
+          status: 1,
+          sortOrder: await nextSortOrder("gallery"),
+        },
       });
     }
 
@@ -290,20 +335,12 @@ export async function savePersonalGalleryItem(formData: FormData) {
 
 export async function deletePersonalGalleryItem(formData: FormData) {
   await requireSession();
-  const id = text(formData, "id");
-
-  const before = await prisma.personalGalleryItem.findUnique({
-    where: { id },
-    select: { imageAssetId: true },
-  });
 
   try {
-    await prisma.personalGalleryItem.delete({ where: { id } });
+    await archiveEntity("gallery", text(formData, "id"));
   } catch (error) {
     return fail(formData, errorMessage(error));
   }
-
-  await releaseAsset(before?.imageAssetId);
 
   await finish(formData, "Gallery item deleted.");
 }
@@ -324,9 +361,9 @@ export async function savePersonalWishlistItem(formData: FormData) {
 
   const before = id
     ? await prisma.personalWishlistItem.findUnique({
-        where: { id },
-        select: { imageAssetId: true },
-      })
+      where: { id },
+      select: { imageAssetId: true },
+    })
     : null;
 
   let keptAsset: string | null = null;
@@ -341,17 +378,17 @@ export async function savePersonalWishlistItem(formData: FormData) {
         "personal/wishlist",
       ),
       done: checkbox(formData, "done"),
-      status: checkbox(formData, "status") ? 1 : 0,
     };
 
     if (id) {
       await prisma.personalWishlistItem.update({ where: { id }, data });
     } else {
-      const last = await prisma.personalWishlistItem.aggregate({
-        _max: { sortOrder: true },
-      });
       await prisma.personalWishlistItem.create({
-        data: { ...data, sortOrder: (last._max.sortOrder ?? -1) + 1 },
+        data: {
+          ...data,
+          status: 1,
+          sortOrder: await nextSortOrder("wishlist"),
+        },
       });
     }
 
@@ -369,20 +406,12 @@ export async function savePersonalWishlistItem(formData: FormData) {
 
 export async function deletePersonalWishlistItem(formData: FormData) {
   await requireSession();
-  const id = text(formData, "id");
-
-  const before = await prisma.personalWishlistItem.findUnique({
-    where: { id },
-    select: { imageAssetId: true },
-  });
 
   try {
-    await prisma.personalWishlistItem.delete({ where: { id } });
+    await archiveEntity("wishlist", text(formData, "id"));
   } catch (error) {
     return fail(formData, errorMessage(error));
   }
-
-  await releaseAsset(before?.imageAssetId);
 
   await finish(formData, "Wishlist item deleted.");
 }
@@ -394,10 +423,10 @@ export async function toggleWishlistItem(formData: FormData) {
   try {
     const item = await prisma.personalWishlistItem.findUnique({
       where: { id },
-      select: { done: true },
+      select: { done: true, deletedAt: true },
     });
 
-    if (!item) {
+    if (!item || item.deletedAt) {
       return fail(formData, "That wishlist item no longer exists.");
     }
 
@@ -410,105 +439,4 @@ export async function toggleWishlistItem(formData: FormData) {
   }
 
   await finish(formData, "Wishlist updated.");
-}
-
-// ---------------------------------------------------------------------------
-// Reordering
-// ---------------------------------------------------------------------------
-
-async function orderedIds(entity: string) {
-  switch (entity) {
-    case "story":
-      return (
-        await prisma.personalStory.findMany({
-          orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-          select: { id: true },
-        })
-      ).map((row) => row.id);
-    case "place":
-      return (
-        await prisma.personalPlace.findMany({
-          orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-          select: { id: true },
-        })
-      ).map((row) => row.id);
-    case "gallery":
-      return (
-        await prisma.personalGalleryItem.findMany({
-          orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-          select: { id: true },
-        })
-      ).map((row) => row.id);
-    case "wishlist":
-      return (
-        await prisma.personalWishlistItem.findMany({
-          orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-          select: { id: true },
-        })
-      ).map((row) => row.id);
-    default:
-      return [];
-  }
-}
-
-async function applyOrder(entity: string, ids: string[]) {
-  switch (entity) {
-    case "story":
-      await prisma.$transaction(
-        ids.map((id, sortOrder) =>
-          prisma.personalStory.update({ where: { id }, data: { sortOrder } }),
-        ),
-      );
-      break;
-    case "place":
-      await prisma.$transaction(
-        ids.map((id, sortOrder) =>
-          prisma.personalPlace.update({ where: { id }, data: { sortOrder } }),
-        ),
-      );
-      break;
-    case "gallery":
-      await prisma.$transaction(
-        ids.map((id, sortOrder) =>
-          prisma.personalGalleryItem.update({
-            where: { id },
-            data: { sortOrder },
-          }),
-        ),
-      );
-      break;
-    case "wishlist":
-      await prisma.$transaction(
-        ids.map((id, sortOrder) =>
-          prisma.personalWishlistItem.update({
-            where: { id },
-            data: { sortOrder },
-          }),
-        ),
-      );
-      break;
-  }
-}
-
-export async function movePersonalItem(formData: FormData) {
-  await requireSession();
-
-  const entity = text(formData, "entity");
-  const id = text(formData, "id");
-  const direction = text(formData, "direction");
-  const path = currentPath(formData);
-
-  const ids = await orderedIds(entity);
-  const index = ids.indexOf(id);
-  const target = direction === "up" ? index - 1 : index + 1;
-
-  if (index === -1 || target < 0 || target >= ids.length) {
-    redirect(path);
-  }
-
-  [ids[index], ids[target]] = [ids[target], ids[index]];
-  await applyOrder(entity, ids);
-
-  revalidatePath(path);
-  redirect(path);
 }

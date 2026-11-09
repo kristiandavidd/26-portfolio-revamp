@@ -2,18 +2,14 @@
 
 import { prisma } from "@repo/db";
 import { requireSession } from "@/lib/auth";
-import {
-  releaseAsset,
-  releaseReplacedAssets,
-  resolveAssetField,
-} from "@/lib/assets";
+import { releaseReplacedAssets, resolveAssetField } from "@/lib/assets";
+import { archiveEntity, nextSortOrder } from "@/lib/entities";
 import {
   checkbox,
   commaList,
   errorMessage,
   fail,
   finish,
-  integer,
   lines,
   nullableText,
   slugify,
@@ -148,7 +144,7 @@ export async function saveProfile(formData: FormData) {
 }
 
 // ---------------------------------------------------------------------------
-// Projects
+// Shared helpers
 // ---------------------------------------------------------------------------
 
 async function resolveTagIds(tags: string[]) {
@@ -168,32 +164,74 @@ async function resolveTagIds(tags: string[]) {
   return ids;
 }
 
+/**
+ * Slugs are never typed by hand. A new row derives one from its name and falls
+ * back to a suffix if that slug is already taken; an existing row keeps the slug
+ * it was published with so its URL stays stable.
+ */
+async function autoSlug(
+  kind: "project" | "company" | "product",
+  name: string,
+) {
+  const base = slugify(name) || "item";
+  let candidate = base;
+  let counter = 2;
+
+  for (;;) {
+    const existing =
+      kind === "project"
+        ? await prisma.project.findUnique({
+            where: { slug: candidate },
+            select: { id: true },
+          })
+        : kind === "company"
+          ? await prisma.company.findUnique({
+              where: { slug: candidate },
+              select: { id: true },
+            })
+          : await prisma.dephiliaProduct.findUnique({
+              where: { slug: candidate },
+              select: { id: true },
+            });
+
+    if (!existing) return candidate;
+    candidate = `${base}-${counter}`;
+    counter += 1;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Projects
+// ---------------------------------------------------------------------------
+
 export async function saveProject(formData: FormData) {
   await requireSession();
 
   const id = text(formData, "id");
-  const slug = slugify(text(formData, "slug") || text(formData, "name"));
   const name = text(formData, "name");
 
-  if (!name || !slug) {
-    return fail(formData, "A project needs a name and a slug.");
+  if (!name) {
+    return fail(formData, "A project needs a name.");
   }
 
   const before = id
     ? await prisma.project.findUnique({
-      where: { id },
-      select: {
-        logoAssetId: true,
-        backgroundAssetId: true,
-        foregroundAssetId: true,
-        sectionBackgroundAssetId: true,
-      },
-    })
+        where: { id },
+        select: {
+          slug: true,
+          logoAssetId: true,
+          backgroundAssetId: true,
+          foregroundAssetId: true,
+          sectionBackgroundAssetId: true,
+        },
+      })
     : null;
 
   let keptAssets: Array<string | null> = [];
 
   try {
+    const slug = before?.slug ?? (await autoSlug("project", name));
+
     const base = {
       slug,
       name,
@@ -219,8 +257,6 @@ export async function saveProject(formData: FormData) {
       summary: text(formData, "summary"),
       role: nullableText(formData, "role"),
       periodLabel: nullableText(formData, "periodLabel"),
-      sortOrder: integer(formData, "sortOrder"),
-      status: checkbox(formData, "status") ? 1 : 0,
     };
 
     const features = lines(formData, "features");
@@ -231,7 +267,13 @@ export async function saveProject(formData: FormData) {
     if (id) {
       await prisma.project.update({ where: { id }, data: base });
     } else {
-      const created = await prisma.project.create({ data: base });
+      const created = await prisma.project.create({
+        data: {
+          ...base,
+          status: 1,
+          sortOrder: await nextSortOrder("project"),
+        },
+      });
       projectId = created.id;
     }
 
@@ -277,33 +319,11 @@ export async function saveProject(formData: FormData) {
 
 export async function deleteProject(formData: FormData) {
   await requireSession();
-  const id = text(formData, "id");
-
-  const before = await prisma.project.findUnique({
-    where: { id },
-    select: {
-      logoAssetId: true,
-      backgroundAssetId: true,
-      foregroundAssetId: true,
-      sectionBackgroundAssetId: true,
-    },
-  });
 
   try {
-    await prisma.project.delete({ where: { id } });
+    await archiveEntity("project", text(formData, "id"));
   } catch (error) {
     return fail(formData, errorMessage(error));
-  }
-
-  if (before) {
-    for (const assetId of [
-      before.logoAssetId,
-      before.backgroundAssetId,
-      before.foregroundAssetId,
-      before.sectionBackgroundAssetId,
-    ]) {
-      await releaseAsset(assetId);
-    }
   }
 
   await finish(formData, "Project deleted.");
@@ -318,36 +338,39 @@ export async function saveCompany(formData: FormData) {
 
   const id = text(formData, "id");
   const name = text(formData, "name");
-  const slug = slugify(text(formData, "slug") || name);
 
-  if (!name || !slug) {
-    return fail(formData, "A company needs a name and a slug.");
+  if (!name) {
+    return fail(formData, "A company needs a name.");
   }
 
   const before = id
     ? await prisma.company.findUnique({
-      where: { id },
-      select: { logoAssetId: true },
-    })
+        where: { id },
+        select: { slug: true, logoAssetId: true },
+      })
     : null;
 
   let keptAsset: string | null = null;
 
   try {
     const base = {
-      slug,
+      slug: before?.slug ?? (await autoSlug("company", name)),
       name,
       website: nullableText(formData, "website"),
       summary: nullableText(formData, "summary"),
       logoAssetId: await resolveAssetField(formData, "logoAssetId", "company"),
-      sortOrder: integer(formData, "sortOrder"),
-      status: checkbox(formData, "status") ? 1 : 0,
     };
 
     if (id) {
       await prisma.company.update({ where: { id }, data: base });
     } else {
-      await prisma.company.create({ data: base });
+      await prisma.company.create({
+        data: {
+          ...base,
+          status: 1,
+          sortOrder: await nextSortOrder("company"),
+        },
+      });
     }
 
     keptAsset = base.logoAssetId;
@@ -364,23 +387,12 @@ export async function saveCompany(formData: FormData) {
 
 export async function deleteCompany(formData: FormData) {
   await requireSession();
-  const id = text(formData, "id");
-
-  const before = await prisma.company.findUnique({
-    where: { id },
-    select: { logoAssetId: true },
-  });
 
   try {
-    await prisma.company.delete({ where: { id } });
-  } catch {
-    return fail(
-      formData,
-      "This company is still linked to an experience entry. Remove that entry first.",
-    );
+    await archiveEntity("company", text(formData, "id"));
+  } catch (error) {
+    return fail(formData, errorMessage(error));
   }
-
-  await releaseAsset(before?.logoAssetId);
 
   await finish(formData, "Company deleted.");
 }
@@ -397,7 +409,7 @@ export async function saveExperience(formData: FormData) {
   const role = text(formData, "role");
 
   if (!companyId || !role) {
-    await fail(formData, "Pick a company and give the role a title.");
+    return fail(formData, "Pick a company and give the role a title.");
   }
 
   const base = {
@@ -405,8 +417,6 @@ export async function saveExperience(formData: FormData) {
     role,
     periodLabel: text(formData, "periodLabel"),
     isCurrent: checkbox(formData, "isCurrent"),
-    sortOrder: integer(formData, "sortOrder"),
-    status: checkbox(formData, "status") ? 1 : 0,
   };
 
   const highlights = lines(formData, "highlights");
@@ -417,7 +427,13 @@ export async function saveExperience(formData: FormData) {
     if (id) {
       await prisma.experience.update({ where: { id }, data: base });
     } else {
-      const created = await prisma.experience.create({ data: base });
+      const created = await prisma.experience.create({
+        data: {
+          ...base,
+          status: 1,
+          sortOrder: await nextSortOrder("experience"),
+        },
+      });
       experienceId = created.id;
     }
 
@@ -432,7 +448,7 @@ export async function saveExperience(formData: FormData) {
       }),
     ]);
   } catch (error) {
-    await fail(formData, errorMessage(error));
+    return fail(formData, errorMessage(error));
   }
 
   await finish(formData, id ? "Experience updated." : "Experience created.");
@@ -442,9 +458,9 @@ export async function deleteExperience(formData: FormData) {
   await requireSession();
 
   try {
-    await prisma.experience.delete({ where: { id: text(formData, "id") } });
+    await archiveEntity("experience", text(formData, "id"));
   } catch (error) {
-    await fail(formData, errorMessage(error));
+    return fail(formData, errorMessage(error));
   }
 
   await finish(formData, "Experience deleted.");
@@ -459,24 +475,23 @@ export async function saveProduct(formData: FormData) {
 
   const id = text(formData, "id");
   const name = text(formData, "name");
-  const slug = slugify(text(formData, "slug") || name);
 
-  if (!name || !slug) {
-    return fail(formData, "A product needs a name and a slug.");
+  if (!name) {
+    return fail(formData, "A product needs a name.");
   }
 
   const before = id
     ? await prisma.dephiliaProduct.findUnique({
-      where: { id },
-      select: { iconAssetId: true, backgroundAssetId: true },
-    })
+        where: { id },
+        select: { slug: true, iconAssetId: true, backgroundAssetId: true },
+      })
     : null;
 
   let keptAssets: Array<string | null> = [];
 
   try {
     const base = {
-      slug,
+      slug: before?.slug ?? (await autoSlug("product", name)),
       name,
       category: text(formData, "category"),
       description: text(formData, "description"),
@@ -488,14 +503,18 @@ export async function saveProduct(formData: FormData) {
         "dephilia",
       ),
       url: nullableText(formData, "url"),
-      sortOrder: integer(formData, "sortOrder"),
-      status: checkbox(formData, "status") ? 1 : 0,
     };
 
     if (id) {
       await prisma.dephiliaProduct.update({ where: { id }, data: base });
     } else {
-      await prisma.dephiliaProduct.create({ data: base });
+      await prisma.dephiliaProduct.create({
+        data: {
+          ...base,
+          status: 1,
+          sortOrder: await nextSortOrder("product"),
+        },
+      });
     }
 
     keptAssets = [base.iconAssetId, base.backgroundAssetId];
@@ -515,21 +534,12 @@ export async function saveProduct(formData: FormData) {
 
 export async function deleteProduct(formData: FormData) {
   await requireSession();
-  const id = text(formData, "id");
-
-  const before = await prisma.dephiliaProduct.findUnique({
-    where: { id },
-    select: { iconAssetId: true, backgroundAssetId: true },
-  });
 
   try {
-    await prisma.dephiliaProduct.delete({ where: { id } });
+    await archiveEntity("product", text(formData, "id"));
   } catch (error) {
     return fail(formData, errorMessage(error));
   }
-
-  await releaseAsset(before?.iconAssetId);
-  await releaseAsset(before?.backgroundAssetId);
 
   await finish(formData, "Product deleted.");
 }
@@ -550,9 +560,9 @@ export async function saveCertification(formData: FormData) {
 
   const before = id
     ? await prisma.certification.findUnique({
-      where: { id },
-      select: { logoAssetId: true },
-    })
+        where: { id },
+        select: { logoAssetId: true },
+      })
     : null;
 
   let keptAsset: string | null = null;
@@ -570,14 +580,18 @@ export async function saveCertification(formData: FormData) {
       ),
       credentialId: nullableText(formData, "credentialId"),
       url: nullableText(formData, "url"),
-      sortOrder: integer(formData, "sortOrder"),
-      status: checkbox(formData, "status") ? 1 : 0,
     };
 
     if (id) {
       await prisma.certification.update({ where: { id }, data: base });
     } else {
-      await prisma.certification.create({ data: base });
+      await prisma.certification.create({
+        data: {
+          ...base,
+          status: 1,
+          sortOrder: await nextSortOrder("certification"),
+        },
+      });
     }
 
     keptAsset = base.logoAssetId;
@@ -594,20 +608,12 @@ export async function saveCertification(formData: FormData) {
 
 export async function deleteCertification(formData: FormData) {
   await requireSession();
-  const id = text(formData, "id");
-
-  const before = await prisma.certification.findUnique({
-    where: { id },
-    select: { logoAssetId: true },
-  });
 
   try {
-    await prisma.certification.delete({ where: { id } });
+    await archiveEntity("certification", text(formData, "id"));
   } catch (error) {
     return fail(formData, errorMessage(error));
   }
-
-  await releaseAsset(before?.logoAssetId);
 
   await finish(formData, "Credential deleted.");
 }
@@ -619,7 +625,7 @@ export async function saveCommunityRole(formData: FormData) {
   const programme = text(formData, "programme");
 
   if (!programme) {
-    await fail(formData, "A community entry needs a programme.");
+    return fail(formData, "A community entry needs a programme.");
   }
 
   const base = {
@@ -629,32 +635,38 @@ export async function saveCommunityRole(formData: FormData) {
     icon: text(formData, "icon", "cloud"),
     metric: text(formData, "metric"),
     metricNote: text(formData, "metricNote"),
-    sortOrder: integer(formData, "sortOrder"),
-    status: checkbox(formData, "status") ? 1 : 0,
   };
 
   try {
     if (id) {
       await prisma.communityRole.update({ where: { id }, data: base });
     } else {
-      await prisma.communityRole.create({ data: base });
+      await prisma.communityRole.create({
+        data: {
+          ...base,
+          status: 1,
+          sortOrder: await nextSortOrder("community"),
+        },
+      });
     }
   } catch (error) {
-    await fail(formData, errorMessage(error));
+    return fail(formData, errorMessage(error));
   }
 
-  await finish(formData, id ? "Community entry updated." : "Community entry created.");
+  await finish(
+    formData,
+    id ? "Community entry updated." : "Community entry created.",
+  );
 }
 
 export async function deleteCommunityRole(formData: FormData) {
   await requireSession();
 
   try {
-    await prisma.communityRole.delete({ where: { id: text(formData, "id") } });
+    await archiveEntity("community", text(formData, "id"));
   } catch (error) {
-    await fail(formData, errorMessage(error));
+    return fail(formData, errorMessage(error));
   }
 
   await finish(formData, "Community entry deleted.");
 }
-

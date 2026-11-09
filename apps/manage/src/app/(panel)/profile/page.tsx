@@ -4,10 +4,10 @@ import {
   Field,
   Input,
   PageHeader,
-  Select,
   Textarea,
 } from "@repo/ui";
 import { AssetField } from "@/components/panel/AssetField";
+import { SelectMenu } from "@/components/panel/SelectMenu";
 import { getAssetMap } from "@/lib/assets";
 import { saveProfile } from "@/lib/actions/content";
 
@@ -34,7 +34,7 @@ export default async function ProfilePage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow="Content"
+        eyebrow="Professional"
         title="Profile"
         description="The copy and marks shared by the hero, about band, footer and metadata."
       />
@@ -155,17 +155,15 @@ export default async function ProfilePage() {
                 />
               </Field>
               <Field label="Icon" htmlFor={`socialIcon-${index}`}>
-                <Select
+                <SelectMenu
                   id={`socialIcon-${index}`}
                   name="socialIcon"
                   defaultValue={social?.icon ?? "website"}
-                >
-                  {SOCIAL_ICONS.map((icon) => (
-                    <option key={icon} value={icon}>
-                      {icon}
-                    </option>
-                  ))}
-                </Select>
+                  options={SOCIAL_ICONS.map((icon) => ({
+                    value: icon,
+                    label: icon,
+                  }))}
+                />
               </Field>
             </div>
           ))}

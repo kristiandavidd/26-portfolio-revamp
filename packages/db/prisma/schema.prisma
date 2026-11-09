@@ -44,6 +44,7 @@ model Company {
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
 
   logo        Asset?       @relation("CompanyLogo", fields: [logoAssetId], references: [id], onDelete: SetNull)
   experiences Experience[]
@@ -94,7 +95,6 @@ model Asset {
   productBackgrounds      DephiliaProduct[] @relation("ProductBackground")
   certificationLogos      Certification[]   @relation("CertificationLogo")
   personalPortraits       PersonalProfile[] @relation("PersonalPortrait")
-  personalStoryImages     PersonalStory[]   @relation("PersonalStoryImage")
   personalPlaceImages     PersonalPlace[]   @relation("PersonalPlaceImage")
   personalGalleryImages   PersonalGalleryItem[] @relation("PersonalGalleryImage")
   personalWishlistImages  PersonalWishlistItem[] @relation("PersonalWishlistImage")
@@ -180,6 +180,7 @@ model Experience {
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
 
   company    Company             @relation(fields: [companyId], references: [id], onDelete: Restrict)
   highlights ExperienceHighlight[]
@@ -220,6 +221,7 @@ model Project {
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
 
   company               Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
   logoAsset             Asset?   @relation("ProjectLogo", fields: [logoAssetId], references: [id], onDelete: SetNull)
@@ -272,6 +274,7 @@ model DephiliaProduct {
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
 
   iconAsset       Asset? @relation("ProductIcon", fields: [iconAssetId], references: [id], onDelete: SetNull)
   backgroundAsset Asset? @relation("ProductBackground", fields: [backgroundAssetId], references: [id], onDelete: SetNull)
@@ -293,6 +296,7 @@ model Certification {
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
 
   logoAsset Asset? @relation("CertificationLogo", fields: [logoAssetId], references: [id], onDelete: SetNull)
 
@@ -310,6 +314,7 @@ model CommunityRole {
   metricNote  String @default("") @map("metric_note")
   sortOrder   Int    @default(0) @map("sort_order")
   status      Int    @default(1)
+  deletedAt   DateTime? @map("deleted_at")
 
   @@map("tb_community_role")
 }
@@ -391,23 +396,59 @@ model PersonalProfile {
   @@map("tb_personal_profile")
 }
 
-/// Chronological story cards. One period per card, one to two paragraphs.
-model PersonalStory {
-  id           String  @id @default(cuid())
-  periodLabel  String  @default("") @map("period_label")
-  title        String
-  body         String  @default("")
-  imageAssetId String? @map("image_asset_id")
-  sortOrder    Int     @default(0) @map("sort_order")
-  status       Int     @default(1)
+/// A chapter groups the story by period. The year is the anchor; the title is
+/// optional.
+model PersonalChapter {
+  id        String  @id @default(cuid())
+  year      String  @default("")
+  title     String  @default("")
+  sortOrder Int     @default(0) @map("sort_order")
+  status    Int     @default(1)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
 
-  imageAsset Asset? @relation("PersonalStoryImage", fields: [imageAssetId], references: [id], onDelete: SetNull)
+  subchapters PersonalSubchapter[]
 
   @@index([status, sortOrder])
-  @@map("tb_personal_story")
+  @@map("tb_personal_chapter")
+}
+
+/// A subheading inside a chapter: one beat of the period.
+model PersonalSubchapter {
+  id        String @id @default(cuid())
+  chapterId String @map("chapter_id")
+  title     String
+  sortOrder Int    @default(0) @map("sort_order")
+  status    Int    @default(1)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  chapter    PersonalChapter     @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  paragraphs PersonalParagraph[]
+
+  @@index([chapterId, status, sortOrder])
+  @@map("tb_personal_subchapter")
+}
+
+/// One paragraph of a subchapter. Free text, ordered.
+model PersonalParagraph {
+  id           String  @id @default(cuid())
+  subchapterId String  @map("subchapter_id")
+  body         String  @default("")
+  sortOrder    Int     @default(0) @map("sort_order")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  subchapter PersonalSubchapter @relation(fields: [subchapterId], references: [id], onDelete: Cascade)
+
+  @@index([subchapterId, sortOrder])
+  @@map("tb_personal_paragraph")
 }
 
 /// Places that have been visited, with an optional map link.
@@ -424,6 +465,7 @@ model PersonalPlace {
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
 
   imageAsset Asset? @relation("PersonalPlaceImage", fields: [imageAssetId], references: [id], onDelete: SetNull)
 
@@ -443,6 +485,7 @@ model PersonalGalleryItem {
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
 
   imageAsset Asset? @relation("PersonalGalleryImage", fields: [imageAssetId], references: [id], onDelete: SetNull)
 
@@ -462,6 +505,7 @@ model PersonalWishlistItem {
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
 
   imageAsset Asset? @relation("PersonalWishlistImage", fields: [imageAssetId], references: [id], onDelete: SetNull)
 

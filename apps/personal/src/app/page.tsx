@@ -51,7 +51,7 @@ export default async function PersonalHome() {
     process.env.NEXT_PUBLIC_PORTFOLIO_URL || "https://kristiandav.id";
 
   const counts: Record<string, string> = {
-    "/story": story.length > 0 ? `${story.length} cards` : "—",
+    "/story": story.length > 0 ? `${story.length} chapters` : "—",
     "/places": places.length > 0 ? `${places.length} places` : "—",
     "/gallery": gallery.length > 0 ? `${gallery.length} photos` : "—",
     "/wishlist":

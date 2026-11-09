@@ -1,18 +1,15 @@
 import { prisma } from "@repo/db";
-import {
-  Badge,
-  Checkbox,
-  Field,
-  Input,
-  PageHeader,
-} from "@repo/ui";
-import { AddPanel } from "@/components/panel/AddPanel";
+import { Button, Field, Input, PageHeader } from "@repo/ui";
 import { AssetField, type AssetInfo } from "@/components/panel/AssetField";
 import { DeleteForm } from "@/components/panel/FormBits";
+import { Modal } from "@/components/panel/Modal";
+import { Switch } from "@/components/panel/Switch";
+import { EmptyRow, TableShell, Td, Th } from "@/components/panel/Table";
 import {
   Reorder,
+  StatusToggle,
   WishlistToggle,
-} from "@/components/panel/PersonalControls";
+} from "@/components/panel/RowActions";
 import { getAssetMap } from "@/lib/assets";
 import {
   deletePersonalWishlistItem,
@@ -42,7 +39,7 @@ function WishlistForm({
   const key = item?.id ?? "new";
 
   return (
-    <form action={savePersonalWishlistItem} className="flex flex-col gap-4">
+    <form action={savePersonalWishlistItem} className="flex flex-col gap-5">
       <input type="hidden" name="_path" value={PATH} />
       {item ? <input type="hidden" name="id" value={item.id} /> : null}
 
@@ -72,8 +69,8 @@ function WishlistForm({
           asset={assets.get(item?.imageAssetId ?? "") ?? null}
           hint="Optional. Without one, the site shows a placeholder tile."
         />
-        <div className="flex flex-col justify-end gap-3">
-          <Checkbox
+        <div className="flex items-end pb-1">
+          <Switch
             name="done"
             label="Already done"
             defaultChecked={item?.done ?? false}
@@ -81,18 +78,10 @@ function WishlistForm({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Checkbox
-          name="status"
-          label="Visible on the personal site"
-          defaultChecked={item ? item.status === 1 : true}
-        />
-        <button
-          type="submit"
-          className="inline-flex h-9 items-center rounded-full bg-brand px-4 text-sm font-medium text-white transition-colors hover:bg-brand-dark"
-        >
+      <div className="flex justify-end">
+        <Button type="submit">
           {item ? "Save item" : "Add item"}
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -101,6 +90,7 @@ function WishlistForm({
 export default async function PersonalWishlistPage() {
   const [items, assets] = await Promise.all([
     prisma.personalWishlistItem.findMany({
+      where: { deletedAt: null },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     }),
     getAssetMap(),
@@ -113,71 +103,82 @@ export default async function PersonalWishlistPage() {
       <PageHeader
         eyebrow="Personal"
         title="Wishlist"
-        description="Things you still want to do. Tick them off here and the public checklist follows."
+        description={`Things you still want to do — ${done} of ${items.length} ticked off.`}
+        actions={
+          <Modal
+            triggerLabel="New wishlist item"
+            triggerVariant="primary"
+            triggerSize="md"
+            title="New wishlist item"
+            description="The list follows table order."
+          >
+            <WishlistForm assets={assets} />
+          </Modal>
+        }
       />
 
-      <AddPanel
-        title="Add a wishlist item"
-        description="The list follows this order. Use the arrows to reorder."
-        trailing={
-          <Badge tone="accent">
-            {done} / {items.length} done
-          </Badge>
-        }
-      >
-        <WishlistForm assets={assets} />
-      </AddPanel>
+      <TableShell>
+        <thead>
+          <tr>
+            <Th className="w-12 pl-5">#</Th>
+            <Th className="w-12">Done</Th>
+            <Th>Title</Th>
+            <Th>Note</Th>
+            <Th>Status</Th>
+            <Th className="pr-5 text-right">Actions</Th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-line/70">
+          {items.length === 0 ? (
+            <EmptyRow>The wishlist is empty.</EmptyRow>
+          ) : null}
 
-      {items.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-line px-6 py-12 text-center text-sm text-muted">
-          The wishlist is empty. Add the first thing above.
-        </p>
-      ) : null}
-
-      <div className="flex flex-col gap-3">
-        {items.map((item, index) => (
-          <div
-            key={item.id}
-            className="overflow-hidden rounded-xl border border-line bg-white"
-          >
-            <div className="flex items-center gap-3 px-5 py-4">
-              <WishlistToggle id={item.id} done={item.done} path={PATH} />
-              <div className="min-w-0 flex-1">
-                <p
+          {items.map((item, index) => (
+            <tr key={item.id}>
+              <Td className="pl-5 font-mono text-[10px] text-muted">
+                {String(index + 1).padStart(2, "0")}
+              </Td>
+              <Td>
+                <WishlistToggle id={item.id} done={item.done} path={PATH} />
+              </Td>
+              <Td>
+                <span
                   className={
                     item.done
-                      ? "truncate text-sm font-medium text-muted line-through"
-                      : "truncate text-sm font-medium text-ink"
+                      ? "font-medium text-muted line-through"
+                      : "font-medium text-ink"
                   }
                 >
                   {item.title}
-                </p>
-                {item.note ? (
-                  <p className="truncate text-xs text-muted">{item.note}</p>
-                ) : null}
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <Badge tone={item.done ? "success" : "accent"}>
-                  {item.done ? "Done" : "To do"}
-                </Badge>
-                {item.status === 0 ? <Badge tone="neutral">Hidden</Badge> : null}
-                <Reorder
+                </span>
+              </Td>
+              <Td className="max-w-[18rem] truncate text-xs text-muted">
+                {item.note || "—"}
+              </Td>
+              <Td>
+                <StatusToggle
                   entity="wishlist"
                   id={item.id}
+                  status={item.status}
                   path={PATH}
-                  first={index === 0}
-                  last={index === items.length - 1}
                 />
-              </div>
-            </div>
-
-            <details className="border-t border-line/70">
-              <summary className="cursor-pointer px-5 py-3 font-mono text-[10px] tracking-[0.14em] text-muted uppercase transition-colors hover:text-ink">
-                Edit item
-              </summary>
-              <div className="px-5 pb-5">
-                <WishlistForm item={item} assets={assets} />
-                <div className="mt-5 border-t border-line/70 pt-4">
+              </Td>
+              <Td className="pr-5">
+                <div className="flex items-center justify-end gap-1.5">
+                  <Reorder
+                    entity="wishlist"
+                    id={item.id}
+                    path={PATH}
+                    first={index === 0}
+                    last={index === items.length - 1}
+                  />
+                  <Modal
+                    triggerLabel="Edit"
+                    title="Edit wishlist item"
+                    description={item.title}
+                  >
+                    <WishlistForm item={item} assets={assets} />
+                  </Modal>
                   <DeleteForm
                     action={deletePersonalWishlistItem}
                     id={item.id}
@@ -185,11 +186,11 @@ export default async function PersonalWishlistPage() {
                     confirm={`Delete "${item.title}" from the wishlist?`}
                   />
                 </div>
-              </div>
-            </details>
-          </div>
-        ))}
-      </div>
+              </Td>
+            </tr>
+          ))}
+        </tbody>
+      </TableShell>
     </div>
   );
 }

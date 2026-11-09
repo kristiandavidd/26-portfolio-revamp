@@ -1,17 +1,11 @@
 import Image from "next/image";
 import { prisma } from "@repo/db";
-import {
-  Badge,
-  Checkbox,
-  Field,
-  Input,
-  PageHeader,
-  Textarea,
-} from "@repo/ui";
-import { AddPanel } from "@/components/panel/AddPanel";
+import { Button, Field, Input, PageHeader, Textarea } from "@repo/ui";
 import { AssetField, type AssetInfo } from "@/components/panel/AssetField";
 import { DeleteForm } from "@/components/panel/FormBits";
-import { Reorder } from "@/components/panel/PersonalControls";
+import { Modal } from "@/components/panel/Modal";
+import { EmptyRow, TableShell, Td, Th } from "@/components/panel/Table";
+import { Reorder, StatusToggle } from "@/components/panel/RowActions";
 import { getAssetMap } from "@/lib/assets";
 import {
   deletePersonalGalleryItem,
@@ -41,7 +35,7 @@ function GalleryForm({
   const key = item?.id ?? "new";
 
   return (
-    <form action={savePersonalGalleryItem} className="flex flex-col gap-4">
+    <form action={savePersonalGalleryItem} className="flex flex-col gap-5">
       <input type="hidden" name="_path" value={PATH} />
       {item ? <input type="hidden" name="id" value={item.id} /> : null}
 
@@ -85,18 +79,10 @@ function GalleryForm({
         />
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Checkbox
-          name="status"
-          label="Visible on the personal site"
-          defaultChecked={item ? item.status === 1 : true}
-        />
-        <button
-          type="submit"
-          className="inline-flex h-9 items-center rounded-full bg-brand px-4 text-sm font-medium text-white transition-colors hover:bg-brand-dark"
-        >
+      <div className="flex justify-end">
+        <Button type="submit">
           {item ? "Save photo" : "Add photo"}
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -105,6 +91,7 @@ function GalleryForm({
 export default async function PersonalGalleryPage() {
   const [items, assets] = await Promise.all([
     prisma.personalGalleryItem.findMany({
+      where: { deletedAt: null },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     }),
     getAssetMap(),
@@ -116,82 +103,107 @@ export default async function PersonalGalleryPage() {
         eyebrow="Personal"
         title="Gallery"
         description="Photographs with a year and one line. The public page packs them into a masonry wall."
+        actions={
+          <Modal
+            triggerLabel="New photo"
+            triggerVariant="primary"
+            triggerSize="md"
+            title="New photograph"
+            description="The wall follows table order."
+          >
+            <GalleryForm assets={assets} />
+          </Modal>
+        }
       />
 
-      <AddPanel
-        title="Add a photograph"
-        description="The gallery follows this order. Use the arrows to reorder."
-      >
-        <GalleryForm assets={assets} />
-      </AddPanel>
+      <TableShell>
+        <thead>
+          <tr>
+            <Th className="w-12 pl-5">#</Th>
+            <Th>Photo</Th>
+            <Th>Year</Th>
+            <Th>Note</Th>
+            <Th>Status</Th>
+            <Th className="pr-5 text-right">Actions</Th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-line/70">
+          {items.length === 0 ? (
+            <EmptyRow>Nothing in the gallery yet.</EmptyRow>
+          ) : null}
 
-      {items.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-line px-6 py-12 text-center text-sm text-muted">
-          Nothing in the gallery yet. Add the first photo above.
-        </p>
-      ) : null}
+          {items.map((item, index) => {
+            const image = item.imageAssetId
+              ? assets.get(item.imageAssetId)
+              : undefined;
 
-      <div className="flex flex-col gap-3">
-        {items.map((item, index) => {
-          const asset = assets.get(item.imageAssetId ?? "");
-          return (
-            <details
-              key={item.id}
-              className="rounded-xl border border-line bg-white"
-            >
-              <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-3 px-5 py-4">
-                <span className="flex min-w-0 items-center gap-3">
-                  {asset ? (
-                    <Image
-                      src={asset.url}
-                      alt=""
-                      width={40}
-                      height={40}
-                      unoptimized
-                      className="h-10 w-10 shrink-0 rounded-lg border border-line object-cover"
-                    />
-                  ) : (
-                    <span className="h-10 w-10 shrink-0 rounded-lg border border-dashed border-line" />
-                  )}
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-medium text-ink">
+            return (
+              <tr key={item.id}>
+                <Td className="pl-5 font-mono text-[10px] text-muted">
+                  {String(index + 1).padStart(2, "0")}
+                </Td>
+                <Td>
+                  <div className="flex items-center gap-3">
+                    <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-line bg-sand">
+                      {image ? (
+                        <Image
+                          src={image.url}
+                          alt=""
+                          fill
+                          unoptimized
+                          sizes="40px"
+                          className="object-cover"
+                        />
+                      ) : null}
+                    </span>
+                    <span className="block max-w-[16rem] truncate font-medium text-ink">
                       {item.title || "Untitled photo"}
                     </span>
-                    <span className="block truncate text-xs text-muted">
-                      {[item.year, item.note].filter(Boolean).join(" · ") ||
-                        "No year or note yet"}
-                    </span>
-                  </span>
-                </span>
-                <span className="flex items-center gap-2">
-                  <Badge tone={item.status === 1 ? "success" : "neutral"}>
-                    {item.status === 1 ? "Visible" : "Hidden"}
-                  </Badge>
-                  <Reorder
+                  </div>
+                </Td>
+                <Td className="font-mono text-[11px] text-muted">
+                  {item.year || "—"}
+                </Td>
+                <Td className="max-w-[16rem] truncate text-xs text-muted">
+                  {item.note || "—"}
+                </Td>
+                <Td>
+                  <StatusToggle
                     entity="gallery"
                     id={item.id}
+                    status={item.status}
                     path={PATH}
-                    first={index === 0}
-                    last={index === items.length - 1}
                   />
-                </span>
-              </summary>
-
-              <div className="border-t border-line/70 px-5 py-5">
-                <GalleryForm item={item} assets={assets} />
-                <div className="mt-5 border-t border-line/70 pt-4">
-                  <DeleteForm
-                    action={deletePersonalGalleryItem}
-                    id={item.id}
-                    path={PATH}
-                    confirm="Delete this photo from the gallery?"
-                  />
-                </div>
-              </div>
-            </details>
-          );
-        })}
-      </div>
+                </Td>
+                <Td className="pr-5">
+                  <div className="flex items-center justify-end gap-1.5">
+                    <Reorder
+                      entity="gallery"
+                      id={item.id}
+                      path={PATH}
+                      first={index === 0}
+                      last={index === items.length - 1}
+                    />
+                    <Modal
+                      triggerLabel="Edit"
+                      title="Edit photo"
+                      description={item.title || "Untitled photo"}
+                    >
+                      <GalleryForm item={item} assets={assets} />
+                    </Modal>
+                    <DeleteForm
+                      action={deletePersonalGalleryItem}
+                      id={item.id}
+                      path={PATH}
+                      confirm="Delete this photo from the gallery?"
+                    />
+                  </div>
+                </Td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </TableShell>
     </div>
   );
 }

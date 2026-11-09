@@ -5,9 +5,9 @@ import {
   Field,
   Input,
   PageHeader,
-  Select,
   Textarea,
 } from "@repo/ui";
+import { SelectMenu } from "@/components/panel/SelectMenu";
 import {
   replyToMessage,
   sendTestEmail,
@@ -104,16 +104,14 @@ export default async function MessagesPage() {
                     <input type="hidden" name="_path" value="/messages" />
                     <input type="hidden" name="id" value={message.id} />
                     <Field label="Status" htmlFor={`status-${message.id}`}>
-                      <Select
+                      <SelectMenu
                         id={`status-${message.id}`}
                         name="status"
                         defaultValue={message.status}
-                      >
-                        <option value="new">new</option>
-                        <option value="read">read</option>
-                        <option value="replied">replied</option>
-                        <option value="archived">archived</option>
-                      </Select>
+                        options={["new", "read", "replied", "archived"].map(
+                          (status) => ({ value: status, label: status }),
+                        )}
+                      />
                     </Field>
                     <button
                       type="submit"

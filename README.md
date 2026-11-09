@@ -83,7 +83,7 @@ and layout, not by a second visual identity.
 | Route | What it shows |
 | --- | --- |
 | `/` | Landing: portrait, intro, and an index of the four sections |
-| `/story` | Chronological timeline, one card per period |
+| `/story` | Chapters by year, each with subchapters and paragraphs |
 | `/places` | Grid of visited places with year, note and map link |
 | `/gallery` | Masonry photo wall with a keyboard-navigable lightbox |
 | `/wishlist` | Checklist split into still-to-do and done, with progress |

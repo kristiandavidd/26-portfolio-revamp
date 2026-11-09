@@ -5,10 +5,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
+  Activity,
   Award,
   BookOpen,
   Briefcase,
   Building2,
+  ChevronDown,
   FolderKanban,
   Images,
   LayoutDashboard,
@@ -33,11 +35,24 @@ type NavItem = {
   exact?: boolean;
 };
 
-const GROUPS: { label: string; items: NavItem[] }[] = [
+type NavGroup = {
+  label: string;
+  icon: LucideIcon;
+  items: NavItem[];
+};
+
+const DASHBOARD: NavItem = {
+  href: "/",
+  label: "Dashboard",
+  icon: LayoutDashboard,
+  exact: true,
+};
+
+const GROUPS: NavGroup[] = [
   {
-    label: "Content",
+    label: "Professional",
+    icon: Briefcase,
     items: [
-      { href: "/", label: "Dashboard", icon: LayoutDashboard },
       { href: "/profile", label: "Profile", icon: User },
       { href: "/experience", label: "Experience", icon: Briefcase },
       { href: "/companies", label: "Companies", icon: Building2 },
@@ -48,6 +63,7 @@ const GROUPS: { label: string; items: NavItem[] }[] = [
   },
   {
     label: "Personal",
+    icon: Sparkles,
     items: [
       { href: "/personal", label: "Landing", icon: Sparkles, exact: true },
       { href: "/personal/story", label: "Story", icon: BookOpen },
@@ -58,9 +74,21 @@ const GROUPS: { label: string; items: NavItem[] }[] = [
   },
   {
     label: "Activity",
+    icon: Activity,
     items: [{ href: "/messages", label: "Messages", icon: Mail }],
   },
 ];
+
+function isActive(pathname: string, item: NavItem) {
+  if (item.exact) return pathname === item.href;
+  return pathname === item.href || pathname.startsWith(`${item.href}/`);
+}
+
+function groupFor(pathname: string) {
+  return GROUPS.find((group) =>
+    group.items.some((item) => isActive(pathname, item)),
+  )?.label;
+}
 
 function Brand({ logoUrl }: { logoUrl: string | null }) {
   return (
@@ -93,56 +121,128 @@ function Brand({ logoUrl }: { logoUrl: string | null }) {
 
 function Navigation({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  // The group that owns the current route is open by default. A click stores
+  // an exception for this route only, so navigating elsewhere re-derives the
+  // default without a state-syncing effect.
+  const [override, setOverride] = useState<{
+    path: string;
+    label: string | null;
+  } | null>(null);
+
+  const activeGroup = groupFor(pathname) ?? null;
+  const expanded =
+    override && override.path === pathname ? override.label : activeGroup;
 
   return (
-    <nav className="flex flex-1 flex-col gap-7 overflow-y-auto px-3 py-6">
-      {GROUPS.map((group) => (
-        <div key={group.label}>
-          <p className="px-3 pb-2 font-mono text-[10px] tracking-[0.22em] text-white/40 uppercase">
-            {group.label}
-          </p>
-          <ul className="flex flex-col gap-0.5">
-            {group.items.map((item) => {
-              const Icon = item.icon;
-              const active = item.exact
-                ? pathname === item.href
-                : item.href === "/"
-                  ? pathname === "/"
-                  : pathname.startsWith(item.href);
+    <nav className="flex flex-1 flex-col gap-1 overflow-x-hidden overflow-y-auto px-3 py-5">
+      <Link
+        href={DASHBOARD.href}
+        onClick={onNavigate}
+        aria-current={pathname === DASHBOARD.href ? "page" : undefined}
+        className={cn(
+          "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors",
+          pathname === DASHBOARD.href
+            ? "bg-white/[0.08] text-white"
+            : "text-white/55 hover:bg-white/[0.04] hover:text-white",
+        )}
+      >
+        <span
+          aria-hidden
+          className={cn(
+            "absolute top-1/2 left-0 h-5 w-0.5 -translate-y-1/2 rounded-full transition-opacity",
+            pathname === DASHBOARD.href ? "bg-brand opacity-100" : "opacity-0",
+          )}
+        />
+        <DASHBOARD.icon
+          size={16}
+          aria-hidden
+          className={
+            pathname === DASHBOARD.href
+              ? "text-brand"
+              : "text-white/40"
+          }
+        />
+        {DASHBOARD.label}
+      </Link>
 
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    onClick={onNavigate}
-                    aria-current={active ? "page" : undefined}
-                    className={cn(
-                      "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors",
-                      active
-                        ? "bg-white/[0.08] text-white"
-                        : "text-white/55 hover:bg-white/[0.04] hover:text-white",
-                    )}
-                  >
-                    <span
-                      aria-hidden
-                      className={cn(
-                        "absolute top-1/2 left-0 h-5 w-0.5 -translate-y-1/2 rounded-full transition-opacity",
-                        active ? "bg-brand opacity-100" : "opacity-0",
-                      )}
-                    />
-                    <Icon
-                      size={16}
-                      aria-hidden
-                      className={active ? "text-brand" : "text-white/40 group-hover:text-white/70"}
-                    />
-                    {item.label}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ))}
+      <div className="mt-4 flex flex-col gap-1">
+        {GROUPS.map((group) => {
+          const open = expanded === group.label;
+          const containsActive = group.items.some((item) =>
+            isActive(pathname, item),
+          );
+
+          return (
+            <div key={group.label}>
+              <button
+                type="button"
+                onClick={() =>
+                  setOverride({
+                    path: pathname,
+                    label: open ? null : group.label,
+                  })
+                }
+                aria-expanded={open}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors",
+                  containsActive
+                    ? "text-white"
+                    : "text-white/55 hover:bg-white/[0.04] hover:text-white",
+                )}
+              >
+                <group.icon
+                  size={16}
+                  aria-hidden
+                  className={containsActive ? "text-brand" : "text-white/40"}
+                />
+                <span className="flex-1">{group.label}</span>
+                <ChevronDown
+                  size={14}
+                  aria-hidden
+                  className={cn(
+                    "text-white/35 transition-transform",
+                    open && "rotate-180",
+                  )}
+                />
+              </button>
+
+              {open ? (
+                <ul className="mt-1 ml-5 flex flex-col gap-0.5 border-l border-white/10 pl-3">
+                  {group.items.map((item) => {
+                    const active = isActive(pathname, item);
+                    const Icon = item.icon;
+
+                    return (
+                      <li key={item.href}>
+                        <Link
+                          href={item.href}
+                          onClick={onNavigate}
+                          aria-current={active ? "page" : undefined}
+                          className={cn(
+                            "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] transition-colors",
+                            active
+                              ? "bg-white/[0.08] text-white"
+                              : "text-white/50 hover:bg-white/[0.04] hover:text-white",
+                          )}
+                        >
+                          <Icon
+                            size={14}
+                            aria-hidden
+                            className={
+                              active ? "text-brand" : "text-white/30"
+                            }
+                          />
+                          {item.label}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
     </nav>
   );
 }
@@ -186,7 +286,7 @@ export function Sidebar({
   username: string;
   logoUrl: string | null;
 }) {
-  const [open, setOpen] = useState(false);
+  const [drawer, setDrawer] = useState(false);
 
   return (
     <>
@@ -204,9 +304,9 @@ export function Sidebar({
         <Brand logoUrl={logoUrl} />
         <button
           type="button"
-          onClick={() => setOpen(true)}
+          onClick={() => setDrawer(true)}
           aria-label="Open menu"
-          aria-expanded={open}
+          aria-expanded={drawer}
           className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 text-white/80"
         >
           <Menu size={18} aria-hidden />
@@ -214,12 +314,12 @@ export function Sidebar({
       </div>
 
       {/* Mobile drawer */}
-      {open ? (
+      {drawer ? (
         <div className="fixed inset-0 z-50 lg:hidden">
           <button
             type="button"
             aria-label="Close menu"
-            onClick={() => setOpen(false)}
+            onClick={() => setDrawer(false)}
             className="absolute inset-0 bg-ink/60 backdrop-blur-sm"
           />
           <div className="page-in relative flex h-full w-[17.5rem] flex-col bg-ink shadow-2xl">
@@ -227,14 +327,14 @@ export function Sidebar({
               <Brand logoUrl={logoUrl} />
               <button
                 type="button"
-                onClick={() => setOpen(false)}
+                onClick={() => setDrawer(false)}
                 aria-label="Close menu"
                 className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 text-white/70"
               >
                 <X size={16} aria-hidden />
               </button>
             </div>
-            <Navigation onNavigate={() => setOpen(false)} />
+            <Navigation onNavigate={() => setDrawer(false)} />
             <Footer username={username} />
           </div>
         </div>
