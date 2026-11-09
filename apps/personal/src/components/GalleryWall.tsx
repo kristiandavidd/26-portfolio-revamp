@@ -238,12 +238,14 @@ export function GalleryWall({ items }: { items: PersonalGalleryView[] }) {
             onClick={onEmptyClick}
             className="fixed inset-0 z-[120] flex flex-col bg-black/95 px-4 pt-4 backdrop-blur-sm sm:px-8 sm:pt-8"
           >
-            <div className="flex shrink-0 items-center justify-between gap-3">
-              <p className="hidden shrink-0 font-mono text-[10px] tracking-[0.2em] text-white/50 uppercase sm:block">
-                {(active ?? 0) + 1} / {items.length}
-              </p>
+            <div className="flex shrink-0 items-center gap-3">
+              <div className="hidden flex-1 basis-0 items-center sm:flex">
+                <p className="font-mono text-[10px] tracking-[0.2em] text-white/50 uppercase">
+                  {(active ?? 0) + 1} / {items.length}
+                </p>
+              </div>
 
-              <div className="flex min-w-0 flex-1 flex-col items-center justify-center">
+              <div className="flex min-w-0 flex-1 basis-0 flex-col items-center justify-center">
                 {current.year ? (
                   <p className="max-w-full truncate font-mono text-[9px] tracking-[0.2em] text-white uppercase">
                     {current.year}
@@ -254,7 +256,7 @@ export function GalleryWall({ items }: { items: PersonalGalleryView[] }) {
                 </p>
               </div>
 
-              <div className="flex shrink-0 items-center gap-1.5">
+              <div className="flex flex-1 basis-0 items-center justify-end gap-1.5">
                 {/* The slot is always reserved, so nothing shifts when zoom starts. */}
                 <button
                   type="button"
