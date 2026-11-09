@@ -239,11 +239,22 @@ export function GalleryWall({ items }: { items: PersonalGalleryView[] }) {
             className="fixed inset-0 z-[120] flex flex-col bg-black/95 px-4 pt-4 backdrop-blur-sm sm:px-8 sm:pt-8"
           >
             <div className="flex shrink-0 items-center justify-between gap-3">
-              <p className="font-mono text-[10px] tracking-[0.2em] text-white/50 uppercase">
+              <p className="hidden shrink-0 font-mono text-[10px] tracking-[0.2em] text-white/50 uppercase sm:block">
                 {(active ?? 0) + 1} / {items.length}
               </p>
 
-              <div className="flex items-center gap-1.5">
+              <div className="flex min-w-0 flex-1 items-baseline justify-center gap-2.5 sm:gap-3">
+                {current.year ? (
+                  <span className="shrink-0 font-mono text-[9px] tracking-[0.2em] text-white uppercase">
+                    {current.year}
+                  </span>
+                ) : null}
+                <span className="truncate text-sm font-medium text-white sm:text-base">
+                  {current.title || "Untitled"}
+                </span>
+              </div>
+
+              <div className="flex shrink-0 items-center gap-1.5">
                 <button
                   type="button"
                   onClick={() => zoomTo(scale - 0.5)}
@@ -253,7 +264,7 @@ export function GalleryWall({ items }: { items: PersonalGalleryView[] }) {
                 >
                   <ZoomOut size={15} aria-hidden />
                 </button>
-                <span className="w-9 text-center font-mono text-[10px] text-white/50">
+                <span className="hidden w-9 text-center font-mono text-[10px] text-white/50 sm:block">
                   {Math.round(scale * 100)}%
                 </span>
                 <button
@@ -286,23 +297,12 @@ export function GalleryWall({ items }: { items: PersonalGalleryView[] }) {
               </div>
             </div>
 
-            <div className="mt-4 shrink-0 text-center">
-              {current.year ? (
-                <p className="font-mono text-[9px] tracking-[0.2em] text-violet uppercase">
-                  {current.year}
-                </p>
-              ) : null}
-              <p className="mt-1 text-base font-medium text-white sm:text-lg">
-                {current.title || "Untitled"}
-              </p>
-            </div>
-
             <div
               ref={frameRef}
               onPointerDown={onPointerDown}
               onClick={onEmptyClick}
               onDragStart={(event) => event.preventDefault()}
-              className={`relative mt-3 flex min-h-0 flex-1 touch-none items-center justify-center overflow-hidden select-none ${scale > MIN_SCALE ? "cursor-grab active:cursor-grabbing" : ""
+              className={`relative mt-4 flex min-h-0 flex-1 touch-none items-center justify-center overflow-hidden select-none ${scale > MIN_SCALE ? "cursor-grab active:cursor-grabbing" : ""
                 }`}
             >
               {items.length > 1 ? (
@@ -348,7 +348,7 @@ export function GalleryWall({ items }: { items: PersonalGalleryView[] }) {
               ) : null}
             </div>
 
-            <div className="shrink-0 px-2 pt-3 pb-2 text-center">
+            <div className="shrink-0 px-2 pt-3 pb-10 text-center sm:pb-8">
               {current.note ? (
                 <p className="mx-auto max-w-xl text-xs leading-relaxed text-white/50">
                   {current.note}
