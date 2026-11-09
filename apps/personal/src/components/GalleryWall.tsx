@@ -301,6 +301,7 @@ export function GalleryWall({ items }: { items: PersonalGalleryView[] }) {
               ref={frameRef}
               onPointerDown={onPointerDown}
               onClick={onEmptyClick}
+              onDragStart={(event) => event.preventDefault()}
               className={`relative mt-3 flex min-h-0 flex-1 touch-none items-center justify-center overflow-hidden select-none ${scale > MIN_SCALE ? "cursor-grab active:cursor-grabbing" : ""
                 }`}
             >
@@ -328,6 +329,7 @@ export function GalleryWall({ items }: { items: PersonalGalleryView[] }) {
                     alt={current.title || current.note || "Photograph"}
                     fill
                     unoptimized
+                    draggable={false}
                     sizes="90vw"
                     className="object-contain"
                   />
