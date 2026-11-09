@@ -1,6 +1,7 @@
 import { prisma } from "@repo/db";
 import { Card, Field, Input, PageHeader, Textarea } from "@repo/ui";
 import { AssetField } from "@/components/panel/AssetField";
+import { SubmitButton } from "@/components/panel/SubmitButton";
 import { getAssetMap } from "@/lib/assets";
 import { savePersonalProfile } from "@/lib/actions/personal";
 
@@ -80,12 +81,9 @@ export default async function PersonalLandingPage() {
         </Card>
 
         <div className="flex justify-end">
-          <button
-            type="submit"
-            className="inline-flex h-10 items-center rounded-full bg-brand px-5 text-sm font-medium text-white transition-colors hover:bg-brand-dark"
-          >
+          <SubmitButton pendingLabel="Saving…" size="md">
             Save landing
-          </button>
+          </SubmitButton>
         </div>
       </form>
     </div>

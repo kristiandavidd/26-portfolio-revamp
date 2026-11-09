@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AlertTriangle, Trash2 } from "lucide-react";
 import { Button } from "@repo/ui";
 import { Dialog } from "@/components/panel/Dialog";
+import { SubmitButton } from "@/components/panel/SubmitButton";
 
 export function DeleteForm({
   action,
@@ -69,9 +70,9 @@ export function DeleteForm({
           <form action={action}>
             <input type="hidden" name="id" value={id} />
             <input type="hidden" name="_path" value={path} />
-            <Button type="submit" variant="danger" size="sm">
+            <SubmitButton variant="danger" size="sm" pendingLabel="Deleting…">
               Delete
-            </Button>
+            </SubmitButton>
           </form>
         </div>
       </Dialog>

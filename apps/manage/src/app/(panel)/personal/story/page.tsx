@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@repo/db";
-import { Button, Field, Input, PageHeader } from "@repo/ui";
+import { Field, Input, PageHeader } from "@repo/ui";
+import { SubmitButton } from "@/components/panel/SubmitButton";
 import { DeleteForm } from "@/components/panel/FormBits";
 import { Modal } from "@/components/panel/Modal";
 import { EmptyRow, TableShell, Td, Th } from "@/components/panel/Table";
@@ -30,7 +31,7 @@ function ChapterForm() {
       </div>
 
       <div className="flex justify-end">
-        <Button type="submit">Add chapter</Button>
+        <SubmitButton pendingLabel="Adding…">Add chapter</SubmitButton>
       </div>
     </form>
   );

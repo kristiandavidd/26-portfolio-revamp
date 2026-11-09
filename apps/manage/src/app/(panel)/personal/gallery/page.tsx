@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { prisma } from "@repo/db";
-import { Button, Field, Input, PageHeader, Textarea } from "@repo/ui";
+import { Field, Input, PageHeader, Textarea } from "@repo/ui";
+import { SubmitButton } from "@/components/panel/SubmitButton";
 import { AssetField, type AssetInfo } from "@/components/panel/AssetField";
 import { DeleteForm } from "@/components/panel/FormBits";
 import { Modal } from "@/components/panel/Modal";
@@ -80,9 +81,9 @@ function GalleryForm({
       </div>
 
       <div className="flex justify-end">
-        <Button type="submit">
+        <SubmitButton pendingLabel="Saving…">
           {item ? "Save photo" : "Add photo"}
-        </Button>
+        </SubmitButton>
       </div>
     </form>
   );

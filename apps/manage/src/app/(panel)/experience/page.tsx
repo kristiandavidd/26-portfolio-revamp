@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { prisma } from "@repo/db";
-import { Button, Field, Input, PageHeader, Textarea } from "@repo/ui";
+import { Field, Input, PageHeader, Textarea } from "@repo/ui";
+import { SubmitButton } from "@/components/panel/SubmitButton";
 import { DeleteForm } from "@/components/panel/FormBits";
 import { Modal } from "@/components/panel/Modal";
 import { SelectMenu } from "@/components/panel/SelectMenu";
@@ -94,7 +95,9 @@ function ExperienceForm({
       </div>
 
       <div className="flex justify-end">
-        <Button type="submit">{item ? "Save experience" : "Add experience"}</Button>
+        <SubmitButton pendingLabel="Saving…">
+          {item ? "Save experience" : "Add experience"}
+        </SubmitButton>
       </div>
     </form>
   );

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useFormStatus } from "react-dom";
 import {
   Activity,
   Award,
@@ -15,6 +16,7 @@ import {
   Images,
   LayoutDashboard,
   ListChecks,
+  Loader2,
   LogOut,
   Mail,
   MapPin,
@@ -247,6 +249,26 @@ function Navigation({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
+function SignOutButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      aria-busy={pending}
+      className="inline-flex items-center gap-1.5 text-xs text-white/45 transition-colors hover:text-white disabled:cursor-wait disabled:opacity-60"
+    >
+      {pending ? (
+        <Loader2 size={13} className="animate-spin" aria-hidden />
+      ) : (
+        <LogOut size={13} aria-hidden />
+      )}
+      {pending ? "Signing out…" : "Sign out"}
+    </button>
+  );
+}
+
 function Footer({ username }: { username: string }) {
   const portfolioUrl =
     process.env.NEXT_PUBLIC_PORTFOLIO_URL || "https://kristiandav.id";
@@ -266,13 +288,7 @@ function Footer({ username }: { username: string }) {
           View portfolio
         </a>
         <form action={logout}>
-          <button
-            type="submit"
-            className="inline-flex items-center gap-1.5 text-xs text-white/45 transition-colors hover:text-white"
-          >
-            <LogOut size={13} aria-hidden />
-            Sign out
-          </button>
+          <SignOutButton />
         </form>
       </div>
     </div>

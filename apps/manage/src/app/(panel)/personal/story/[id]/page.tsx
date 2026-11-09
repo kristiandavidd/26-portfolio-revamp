@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@repo/db";
 import { ArrowLeft } from "lucide-react";
-import { Button, Card, Field, Input, PageHeader, Textarea } from "@repo/ui";
+import { Card, Field, Input, PageHeader, Textarea } from "@repo/ui";
+import { SubmitButton } from "@/components/panel/SubmitButton";
 import { DeleteForm } from "@/components/panel/FormBits";
 import { Modal } from "@/components/panel/Modal";
 import { EmptyRow, TableShell, Td, Th } from "@/components/panel/Table";
@@ -57,9 +58,9 @@ function SubchapterForm({
       </Field>
 
       <div className="flex justify-end">
-        <Button type="submit">
+        <SubmitButton pendingLabel="Saving…">
           {subchapter ? "Save subchapter" : "Add subchapter"}
-        </Button>
+        </SubmitButton>
       </div>
     </form>
   );
@@ -97,9 +98,9 @@ function ParagraphForm({
       </Field>
 
       <div className="flex justify-end">
-        <Button type="submit">
+        <SubmitButton pendingLabel="Saving…">
           {paragraph ? "Save paragraph" : "Add paragraph"}
-        </Button>
+        </SubmitButton>
       </div>
     </form>
   );
@@ -198,7 +199,7 @@ export default async function ChapterPage({
           </div>
 
           <div className="flex justify-end">
-            <Button type="submit">Save chapter</Button>
+            <SubmitButton pendingLabel="Saving…">Save chapter</SubmitButton>
           </div>
         </form>
       </Card>

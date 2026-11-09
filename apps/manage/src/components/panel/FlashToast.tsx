@@ -34,7 +34,7 @@ export function FlashToast({ flash }: { flash: Flash | null }) {
   return (
     <div
       role={error ? "alert" : "status"}
-      className="fixed right-4 bottom-5 z-[100] flex w-[min(22rem,calc(100vw-2rem))] items-start gap-3 overflow-hidden rounded-2xl border border-line bg-surface p-4 shadow-[0_24px_60px_-24px_rgba(10,10,10,0.35)] sm:right-6 sm:bottom-6"
+      className="fixed top-5 right-4 z-[100] flex w-[min(22rem,calc(100vw-2rem))] items-start gap-3 overflow-hidden rounded-2xl border border-line bg-surface p-4 shadow-[0_24px_60px_-24px_rgba(10,10,10,0.35)] sm:top-6 sm:right-6"
     >
       <span
         aria-hidden

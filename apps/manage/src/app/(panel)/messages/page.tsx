@@ -8,6 +8,7 @@ import {
   Textarea,
 } from "@repo/ui";
 import { SelectMenu } from "@/components/panel/SelectMenu";
+import { SubmitButton } from "@/components/panel/SubmitButton";
 import {
   replyToMessage,
   sendTestEmail,
@@ -59,12 +60,9 @@ export default async function MessagesPage() {
             />
           </Field>
           <div className="sm:col-span-2 flex justify-end">
-            <button
-              type="submit"
-              className="inline-flex h-9 items-center rounded-full bg-brand px-4 text-sm font-medium text-white transition-colors hover:bg-brand-dark"
-            >
+            <SubmitButton pendingLabel="Sending…" size="md">
               Send test
-            </button>
+            </SubmitButton>
           </div>
         </form>
       </Card>
@@ -113,12 +111,13 @@ export default async function MessagesPage() {
                         )}
                       />
                     </Field>
-                    <button
-                      type="submit"
-                      className="inline-flex h-9 items-center justify-center rounded-full border border-line px-4 text-sm text-ink hover:border-brand/40"
+                    <SubmitButton
+                      variant="secondary"
+                      size="sm"
+                      pendingLabel="Updating…"
                     >
                       Update status
-                    </button>
+                    </SubmitButton>
                   </form>
 
                   <form action={replyToMessage} className="flex flex-col gap-3">
@@ -135,12 +134,9 @@ export default async function MessagesPage() {
                       <Textarea id={`reply-body-${message.id}`} name="body" rows={5} />
                     </Field>
                     <div className="flex justify-end">
-                      <button
-                        type="submit"
-                        className="inline-flex h-9 items-center rounded-full bg-brand px-4 text-sm font-medium text-white transition-colors hover:bg-brand-dark"
-                      >
+                      <SubmitButton pendingLabel="Sending…" size="md">
                         Send reply via Echo
-                      </button>
+                      </SubmitButton>
                     </div>
                   </form>
                 </div>
