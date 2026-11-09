@@ -243,18 +243,28 @@ export function GalleryWall({ items }: { items: PersonalGalleryView[] }) {
                 {(active ?? 0) + 1} / {items.length}
               </p>
 
-              <div className="flex min-w-0 flex-1 items-baseline justify-center gap-2.5 sm:gap-3">
+              <div className="flex min-w-0 flex-1 flex-col items-center justify-center">
                 {current.year ? (
-                  <span className="shrink-0 font-mono text-[9px] tracking-[0.2em] text-white uppercase">
+                  <p className="max-w-full truncate font-mono text-[9px] tracking-[0.2em] text-white uppercase">
                     {current.year}
-                  </span>
+                  </p>
                 ) : null}
-                <span className="truncate text-sm font-medium text-white sm:text-base">
+                <p className="max-w-full truncate text-sm font-medium text-white sm:text-base">
                   {current.title || "Untitled"}
-                </span>
+                </p>
               </div>
 
               <div className="flex shrink-0 items-center gap-1.5">
+                {/* The slot is always reserved, so nothing shifts when zoom starts. */}
+                <button
+                  type="button"
+                  onClick={resetZoom}
+                  aria-label="Reset zoom"
+                  className={`flex h-9 w-9 items-center justify-center rounded-full border border-white/20 text-white/70 transition-colors hover:border-violet hover:text-violet ${scale > MIN_SCALE ? "" : "invisible"
+                    }`}
+                >
+                  <RotateCcw size={14} aria-hidden />
+                </button>
                 <button
                   type="button"
                   onClick={() => zoomTo(scale - 0.5)}
@@ -276,16 +286,6 @@ export function GalleryWall({ items }: { items: PersonalGalleryView[] }) {
                 >
                   <ZoomIn size={15} aria-hidden />
                 </button>
-                {scale > MIN_SCALE ? (
-                  <button
-                    type="button"
-                    onClick={resetZoom}
-                    aria-label="Reset zoom"
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 text-white/70 transition-colors hover:border-violet hover:text-violet"
-                  >
-                    <RotateCcw size={14} aria-hidden />
-                  </button>
-                ) : null}
                 <button
                   type="button"
                   onClick={close}
