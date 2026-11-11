@@ -69,6 +69,7 @@ function WishlistForm({
           name="imageAssetId"
           asset={assets.get(item?.imageAssetId ?? "") ?? null}
           hint="Optional. Without one, the site shows a placeholder tile."
+          allowPaste
         />
         <div className="flex items-end pb-1">
           <Switch

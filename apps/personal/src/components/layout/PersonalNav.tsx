@@ -36,7 +36,7 @@ export function PersonalNav() {
     >
       <nav
         aria-label="Personal navigation"
-        className="flex items-center gap-0.5 rounded-full border border-line bg-white/90 p-1.5 shadow-lg backdrop-blur"
+        className="flex items-center gap-0.5 rounded-full border border-line bg-surface/85 p-1.5 shadow-lg backdrop-blur"
       >
         {LINKS.map((link) => {
           const Icon = link.icon;
@@ -52,7 +52,7 @@ export function PersonalNav() {
               aria-label={link.label}
               aria-current={active ? "page" : undefined}
               title={link.label}
-              className="relative flex h-10 w-10 items-center justify-center rounded-full text-black/40 transition-colors hover:text-black"
+              className="relative flex h-10 w-10 items-center justify-center rounded-full text-ink/45 transition-colors hover:text-ink"
             >
               {active ? (
                 <motion.span

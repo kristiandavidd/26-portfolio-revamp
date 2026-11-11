@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Container } from "@repo/ui";
-import { PORTFOLIO_URL } from "@/lib/seo";
 
 export default function NotFound() {
   return (
@@ -24,7 +23,7 @@ export default function NotFound() {
         </h1>
         <p className="mt-6 max-w-md text-sm leading-relaxed text-muted sm:text-base">
           The link may be old, or the page may have moved. The notebook is still
-          here, and the work is one click away.
+          here.
         </p>
 
         <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4">
@@ -39,12 +38,6 @@ export default function NotFound() {
               className="transition-transform group-hover:translate-x-0.5"
             />
           </Link>
-          <a
-            href={PORTFOLIO_URL}
-            className="font-mono text-[10px] tracking-[0.2em] text-muted uppercase transition-colors hover:text-black"
-          >
-            The work &rarr;
-          </a>
         </div>
       </Container>
     </main>

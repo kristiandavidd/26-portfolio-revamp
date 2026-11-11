@@ -77,6 +77,7 @@ function GalleryForm({
           name="imageAssetId"
           asset={assets.get(item?.imageAssetId ?? "") ?? null}
           hint="The gallery keeps the original aspect ratio."
+          allowPaste
         />
       </div>
 

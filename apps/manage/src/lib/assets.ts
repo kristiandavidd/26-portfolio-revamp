@@ -126,39 +126,67 @@ export async function releaseAsset(assetId: string | null | undefined) {
 }
 
 async function isAssetReferenced(assetId: string) {
-  const [profiles, patterns, companies, projects, products, certifications] =
-    await prisma.$transaction([
-      prisma.profile.count({
-        where: {
-          OR: [
-            { logoAssetId: assetId },
-            { heroPortraitAssetId: assetId },
-            { aboutBackgroundAssetId: assetId },
-            { footerBackgroundAssetId: assetId },
-          ],
-        },
-      }),
-      prisma.heroPattern.count({ where: { assetId } }),
-      prisma.company.count({ where: { logoAssetId: assetId } }),
-      prisma.project.count({
-        where: {
-          OR: [
-            { logoAssetId: assetId },
-            { backgroundAssetId: assetId },
-            { foregroundAssetId: assetId },
-            { sectionBackgroundAssetId: assetId },
-          ],
-        },
-      }),
-      prisma.dephiliaProduct.count({
-        where: {
-          OR: [{ iconAssetId: assetId }, { backgroundAssetId: assetId }],
-        },
-      }),
-      prisma.certification.count({ where: { logoAssetId: assetId } }),
-    ]);
+  const [
+    profiles,
+    patterns,
+    companies,
+    projects,
+    products,
+    certifications,
+    personalProfiles,
+    personalPlaces,
+    personalGallery,
+    personalWishlist,
+  ] = await prisma.$transaction([
+    prisma.profile.count({
+      where: {
+        OR: [
+          { logoAssetId: assetId },
+          { heroPortraitAssetId: assetId },
+          { aboutBackgroundAssetId: assetId },
+          { footerBackgroundAssetId: assetId },
+        ],
+      },
+    }),
+    prisma.heroPattern.count({ where: { assetId } }),
+    prisma.company.count({ where: { logoAssetId: assetId } }),
+    prisma.project.count({
+      where: {
+        OR: [
+          { logoAssetId: assetId },
+          { backgroundAssetId: assetId },
+          { foregroundAssetId: assetId },
+          { sectionBackgroundAssetId: assetId },
+        ],
+      },
+    }),
+    prisma.dephiliaProduct.count({
+      where: {
+        OR: [{ iconAssetId: assetId }, { backgroundAssetId: assetId }],
+      },
+    }),
+    prisma.certification.count({ where: { logoAssetId: assetId } }),
+    prisma.personalProfile.count({
+      where: {
+        OR: [{ portraitAssetId: assetId }, { heroAssetId: assetId }],
+      },
+    }),
+    prisma.personalPlace.count({ where: { imageAssetId: assetId } }),
+    prisma.personalGalleryItem.count({ where: { imageAssetId: assetId } }),
+    prisma.personalWishlistItem.count({ where: { imageAssetId: assetId } }),
+  ]);
 
   return (
-    profiles + patterns + companies + projects + products + certifications > 0
+    profiles +
+      patterns +
+      companies +
+      projects +
+      products +
+      certifications +
+      personalProfiles +
+      personalPlaces +
+      personalGallery +
+      personalWishlist >
+    0
   );
 }

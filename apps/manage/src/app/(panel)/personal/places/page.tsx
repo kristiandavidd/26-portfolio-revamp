@@ -98,6 +98,7 @@ function PlaceForm({
           name="imageAssetId"
           asset={assets.get(place?.imageAssetId ?? "") ?? null}
           hint="Landscape works best in the places grid."
+          allowPaste
         />
       </div>
 

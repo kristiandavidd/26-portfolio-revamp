@@ -43,7 +43,7 @@ export default function ErrorPage({
           <button
             type="button"
             onClick={() => retry()}
-            className="group inline-flex items-center gap-2 rounded-full bg-black px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-violet"
+            className="group inline-flex items-center gap-2 rounded-full bg-violet px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-violet-dark"
           >
             <RotateCw
               size={14}
@@ -54,7 +54,7 @@ export default function ErrorPage({
           </button>
           <Link
             href="/"
-            className="group inline-flex items-center gap-2 font-mono text-[10px] tracking-[0.2em] text-muted uppercase transition-colors hover:text-black"
+            className="group inline-flex items-center gap-2 font-mono text-[10px] tracking-[0.2em] text-muted uppercase transition-colors hover:text-ink"
           >
             Back to the notebook
             <ArrowRight
@@ -66,7 +66,7 @@ export default function ErrorPage({
         </div>
 
         {error.digest ? (
-          <p className="mt-16 font-mono text-[10px] tracking-[0.18em] text-black/30 uppercase">
+          <p className="mt-16 font-mono text-[10px] tracking-[0.18em] text-ink/30 uppercase">
             Reference {error.digest}
           </p>
         ) : null}

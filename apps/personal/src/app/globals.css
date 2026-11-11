@@ -6,17 +6,17 @@
 @source "../../../../packages/ui/src";
 
 @theme {
-  /* Same system as the professional site — white paper, black ink, one accent —
-     with violet standing in for the portfolio's orange. Only the accent differs;
-     type, motion and layout stay shared. */
-  --color-white: #ffffff;
-  --color-black: #0a0a0a;
+  /* The same system as the professional site, inverted: a dark room instead of
+     white paper, with violet as the only accent. */
   --color-violet: #7c3aed;
   --color-violet-dark: #6d28d9;
 
-  --color-muted: #6b6b6b;
-  --color-line: #e6e6e6;
-  --color-sand: #f2f2f2;
+  --color-paper: #0b0b0d;
+  --color-surface: #141417;
+  --color-ink: #f5f2ee;
+  --color-muted: #a09a92;
+  --color-line: #26262b;
+  --color-sand: #1c1c21;
 
   --font-sans: var(--font-jakarta);
   --font-mono: var(--font-jetbrains-mono);
@@ -27,8 +27,8 @@
 
   html,
   body {
-    background-color: var(--color-white);
-    color: var(--color-black);
+    background-color: var(--color-paper);
+    color: var(--color-ink);
   }
 
   body {
@@ -37,7 +37,7 @@
 
   ::selection {
     background-color: var(--color-violet);
-    color: var(--color-white);
+    color: #ffffff;
   }
 }
 

@@ -228,7 +228,10 @@ export async function getPersonalContent(): Promise<PersonalContent> {
   const [profile, story, places, gallery, wishlist] = await Promise.all([
     prisma.personalProfile.findUnique({
       where: { id: 1 },
-      include: { portraitAsset: personalImage },
+      include: {
+        portraitAsset: personalImage,
+        heroAsset: personalImage,
+      },
     }),
     prisma.personalChapter.findMany({
       where: { status: 1, deletedAt: null },
@@ -271,6 +274,7 @@ export async function getPersonalContent(): Promise<PersonalContent> {
       location: profile?.location ?? "",
       email: profile?.email ?? "",
       portrait: toPersonalImage(profile?.portraitAsset ?? null),
+      hero: toPersonalImage(profile?.heroAsset ?? null),
     },
     story: story.map((chapter) => ({
       id: chapter.id,

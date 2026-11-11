@@ -7,7 +7,7 @@ UI components.
 | --- | --- | --- | --- |
 | Portfolio | `apps/portfolio` | 3000 | The professional portfolio (the existing site) |
 | Manage | `apps/manage` | 3001 | Content panel: profile, experience, companies, projects, products, credentials, messages |
-| Personal | `apps/personal` | 3002 | The personal side: landing, story, places, gallery, wishlist |
+| Personal | `apps/personal` | 3002 | The other side: landing, story, places, gallery, wishlist |
 
 ## Stack
 
@@ -77,20 +77,23 @@ the project root. The panel uses the `folder` column as a logical grouping.
 
 `apps/personal` is a separate site that shares the portfolio's design system —
 the same type stack, smooth scrolling and reveal motion, with a violet accent in
-place of orange — and the same floating dock navigation. It differs by content
-and layout, not by a second visual identity.
+place of orange — but it lives in a dark room instead of white paper. The landing
+uses a fixed hero photograph (managed from the panel) that stays put while the
+content scrolls over it; the rest of the pages sit on the dark surface. The same
+floating dock navigation is used throughout.
 
 | Route | What it shows |
 | --- | --- |
-| `/` | Landing: portrait, intro, and an index of the four sections |
-| `/story` | Chapters by year, each with subchapters and paragraphs |
+| `/` | Landing: fixed hero photo, portrait, intro, and one-line cards for the four sections |
+| `/story` | Chapters by year as an accordion; the last opened chapter is remembered |
 | `/places` | Grid of visited places with year, note and map link |
-| `/gallery` | Masonry photo wall with a keyboard-navigable lightbox |
-| `/wishlist` | Checklist split into still-to-do and done, with progress |
+| `/gallery` | Masonry photo wall with a keyboard-navigable lightbox (zoom, pan, swipe) |
+| `/wishlist` | Checklist split into still-to-do and done, without progress counters |
 
 Everything is edited in the panel under **Personal** (Landing, Story, Places,
 Gallery, Wishlist). Story, places, gallery and wishlist are reorderable with the
-arrow buttons; wishlist items are ticked off from the panel.
+arrow buttons; wishlist items are ticked off from the panel. Image fields on the
+personal forms also accept a pasted image (Ctrl/Cmd+V).
 
 ## Crawlers, SEO and error pages
 
@@ -133,8 +136,9 @@ Main tables:
 | `tb_certification`, `tb_community_role`, `tb_education` | Credentials |
 | `tb_asset` | Silos files and metadata |
 | `tb_contact_message`, `tb_email_log` | Inbox and email trail |
-| `tb_personal_profile` | Personal landing: name, headline, intro, portrait |
-| `tb_personal_story`, `tb_personal_place`, `tb_personal_gallery_item`, `tb_personal_wishlist_item` | Personal sections, ordered by `sort_order` |
+| `tb_personal_profile` | Personal landing: name, headline, intro, portrait and fixed hero background |
+| `tb_personal_chapter`, `tb_personal_subchapter`, `tb_personal_paragraph` | Story, grouped by chapter |
+| `tb_personal_place`, `tb_personal_gallery_item`, `tb_personal_wishlist_item` | Personal sections, ordered by `sort_order` |
 
 Schema: [`packages/db/prisma/schema.prisma`](packages/db/prisma/schema.prisma).
 

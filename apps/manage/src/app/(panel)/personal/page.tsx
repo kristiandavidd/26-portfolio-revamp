@@ -76,7 +76,14 @@ export default async function PersonalLandingPage() {
             label="Portrait"
             name="portraitAssetId"
             asset={assets.get(profile?.portraitAssetId ?? "") ?? null}
-            hint="Shown on the landing. Upload a replacement to swap it."
+            hint="Optional circle beside the name. Upload a replacement to swap it."
+          />
+          <AssetField
+            label="Hero background"
+            name="heroAssetId"
+            asset={assets.get(profile?.heroAssetId ?? "") ?? null}
+            hint="Fixed full-screen image behind the landing. Landscape works best."
+            allowPaste
           />
         </Card>
 

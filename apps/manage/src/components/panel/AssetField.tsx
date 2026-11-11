@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { ImageUp } from "lucide-react";
 import { Button, Field } from "@repo/ui";
 
@@ -21,11 +21,14 @@ export function AssetField({
   name,
   asset,
   hint,
+  allowPaste = false,
 }: {
   label: string;
   name: string;
   asset: AssetInfo | null;
   hint?: string;
+  /** Accept an image straight from the clipboard (Ctrl/Cmd+V). */
+  allowPaste?: boolean;
 }) {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -38,11 +41,50 @@ export function AssetField({
     return () => URL.revokeObjectURL(localUrl);
   }, [localUrl]);
 
+  const applyFile = useCallback((next: File) => {
+    const named =
+      next.name && next.name.trim()
+        ? next
+        : new File([next], `pasted-${Date.now()}.png`, { type: next.type });
+
+    const transfer = new DataTransfer();
+    transfer.items.add(named);
+    if (inputRef.current) inputRef.current.files = transfer.files;
+
+    setFile(named);
+    setLocalUrl(URL.createObjectURL(named));
+    setCleared(false);
+  }, []);
+
+  useEffect(() => {
+    if (!allowPaste) return;
+
+    const onPaste = (event: ClipboardEvent) => {
+      const items = event.clipboardData?.items;
+      if (!items) return;
+
+      const imageItem = Array.from(items).find((item) =>
+        item.type.startsWith("image/"),
+      );
+      const pasted = imageItem?.getAsFile();
+      if (!pasted) return;
+
+      event.preventDefault();
+      applyFile(pasted);
+    };
+
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+  }, [allowPaste, applyFile]);
+
   function pick(event: React.ChangeEvent<HTMLInputElement>) {
     const next = event.target.files?.[0] ?? null;
-    setFile(next);
-    setLocalUrl(next ? URL.createObjectURL(next) : null);
-    if (next) setCleared(false);
+    if (!next) {
+      setFile(null);
+      setLocalUrl(null);
+      return;
+    }
+    applyFile(next);
   }
 
   function remove() {
@@ -128,6 +170,12 @@ export function AssetField({
               Remove
             </Button>
           </span>
+
+          {allowPaste ? (
+            <span className="col-span-2 block text-[11px] text-muted">
+              Paste an image with Ctrl+V to replace it.
+            </span>
+          ) : null}
         </div>
       ) : (
         <label
@@ -143,6 +191,7 @@ export function AssetField({
             </span>
             <span className="block text-xs text-muted">
               PNG, JPG, WebP, AVIF or SVG. Uploaded to Silos.
+              {allowPaste ? " You can also paste with Ctrl+V." : ""}
             </span>
           </span>
         </label>

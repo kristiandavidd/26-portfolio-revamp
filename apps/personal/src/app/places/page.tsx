@@ -41,7 +41,7 @@ export default async function PlacesPage() {
               {places.map((place) => (
                 <article
                   key={place.id}
-                  className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-white transition-colors hover:border-violet/60"
+                  className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-colors hover:border-violet/60"
                 >
                   <div className="relative aspect-[4/3] overflow-hidden bg-sand">
                     {place.image ? (
@@ -76,7 +76,7 @@ export default async function PlacesPage() {
                       </p>
                     ) : null}
                     {place.note ? (
-                      <p className="mt-3 text-sm leading-relaxed text-black/70">
+                      <p className="mt-3 text-sm leading-relaxed text-ink/70">
                         {place.note}
                       </p>
                     ) : null}

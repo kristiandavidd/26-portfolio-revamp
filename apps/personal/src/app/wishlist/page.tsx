@@ -38,7 +38,7 @@ function WishlistRow({ item }: { item: PersonalWishlistView }) {
           className={
             item.done
               ? "text-sm font-medium text-muted line-through"
-              : "text-sm font-medium text-black"
+              : "text-sm font-medium text-ink"
           }
         >
           {item.title}
@@ -67,10 +67,6 @@ export default async function WishlistPage() {
 
   const done = wishlist.filter((item) => item.done);
   const pending = wishlist.filter((item) => !item.done);
-  const percent =
-    wishlist.length > 0
-      ? Math.round((done.length / wishlist.length) * 100)
-      : 0;
 
   return (
     <main className="page-in flex-1 pb-28">
@@ -79,24 +75,6 @@ export default async function WishlistPage() {
           eyebrow="Wishlist"
           title="Things worth wanting."
           description="Places to see, things to try, skills to learn — and the ones already crossed off."
-          meta={
-            wishlist.length > 0 ? (
-              <div className="max-w-sm">
-                <div className="flex items-center justify-between font-mono text-[10px] tracking-[0.18em] text-muted uppercase">
-                  <span>
-                    {done.length} of {wishlist.length} done
-                  </span>
-                  <span>{percent}%</span>
-                </div>
-                <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-sand">
-                  <div
-                    className="h-full rounded-full bg-violet transition-[width]"
-                    style={{ width: `${percent}%` }}
-                  />
-                </div>
-              </div>
-            ) : null
-          }
         />
 
         {wishlist.length === 0 ? (

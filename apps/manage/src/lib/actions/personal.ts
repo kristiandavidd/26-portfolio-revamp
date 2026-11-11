@@ -27,10 +27,11 @@ export async function savePersonalProfile(formData: FormData) {
 
   const before = await prisma.personalProfile.findUnique({
     where: { id: 1 },
-    select: { portraitAssetId: true },
+    select: { portraitAssetId: true, heroAssetId: true },
   });
 
   let keptAsset: string | null = null;
+  let keptHero: string | null = null;
 
   try {
     const data = {
@@ -44,6 +45,11 @@ export async function savePersonalProfile(formData: FormData) {
         "portraitAssetId",
         "personal",
       ),
+      heroAssetId: await resolveAssetField(
+        formData,
+        "heroAssetId",
+        "personal",
+      ),
     };
 
     await prisma.personalProfile.upsert({
@@ -53,12 +59,16 @@ export async function savePersonalProfile(formData: FormData) {
     });
 
     keptAsset = data.portraitAssetId;
+    keptHero = data.heroAssetId;
   } catch (error) {
     return fail(formData, errorMessage(error));
   }
 
   if (before) {
-    await releaseReplacedAssets([before.portraitAssetId], [keptAsset]);
+    await releaseReplacedAssets(
+      [before.portraitAssetId, before.heroAssetId],
+      [keptAsset, keptHero],
+    );
   }
 
   await finish(formData, "Personal landing saved.");

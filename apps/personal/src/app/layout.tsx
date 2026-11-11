@@ -5,7 +5,6 @@ import {
   Sedgwick_Ave_Display,
 } from "next/font/google";
 import { PersonalNav } from "@/components/layout/PersonalNav";
-import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SmoothScrollProvider } from "@/components/layout/SmoothScrollProvider";
 import { getContent } from "@/lib/content";
 import { PERSON_ID, PERSONAL_URL, PORTFOLIO_URL } from "@/lib/seo";
@@ -31,14 +30,14 @@ export async function generateMetadata(): Promise<Metadata> {
   const { profile } = await getContent();
   const portrait = profile.portrait?.url;
   const description =
-    "Stories, places, photographs and things still to do — the personal side of Kristian David, a fullstack software engineer in Semarang, Indonesia.";
-  const title = `The personal side · ${profile.name}`;
+    "Stories, places, photographs and things still to do — the other side of Kristian David.";
+  const title = profile.name || "Kristian David";
 
   return {
     metadataBase: new URL(PERSONAL_URL),
     title: {
       default: title,
-      template: `%s · The personal side of ${profile.name}`,
+      template: `%s · ${profile.name}`,
     },
     description,
     applicationName: title,
@@ -116,7 +115,7 @@ export default async function RootLayout({
         "@type": "WebSite",
         "@id": `${PERSONAL_URL}/#website`,
         url: PERSONAL_URL,
-        name: `The personal side of ${profile.name}`,
+        name: profile.name,
         inLanguage: "en",
         publisher: { "@id": PERSON_ID },
       },
@@ -124,7 +123,7 @@ export default async function RootLayout({
         "@type": "ProfilePage",
         "@id": `${PERSONAL_URL}/#webpage`,
         url: PERSONAL_URL,
-        name: `The personal side of ${profile.name}`,
+        name: profile.name,
         isPartOf: { "@id": `${PERSONAL_URL}/#website` },
         about: { "@id": PERSON_ID },
         mainEntity: { "@id": PERSON_ID },
@@ -138,17 +137,14 @@ export default async function RootLayout({
       lang="en"
       className={`${jakarta.variable} ${jetbrainsMono.variable} ${sedgwickAveDisplay.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col bg-white text-black">
+      <body className="flex min-h-full flex-col bg-paper text-ink">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
           }}
         />
-        <SmoothScrollProvider>
-          {children}
-          <SiteFooter name={profile.name} email={profile.email} />
-        </SmoothScrollProvider>
+        <SmoothScrollProvider>{children}</SmoothScrollProvider>
         <PersonalNav />
       </body>
     </html>

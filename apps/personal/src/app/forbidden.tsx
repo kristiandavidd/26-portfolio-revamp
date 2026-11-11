@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Lock } from "lucide-react";
 import { Container } from "@repo/ui";
-import { PORTFOLIO_URL } from "@/lib/seo";
 
 export default function Forbidden() {
   return (
@@ -39,16 +38,10 @@ export default function Forbidden() {
               className="transition-transform group-hover:translate-x-0.5"
             />
           </Link>
-          <span className="inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[0.2em] text-black/35 uppercase">
+          <span className="inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[0.2em] text-ink/35 uppercase">
             <Lock size={11} aria-hidden />
             Restricted
           </span>
-          <a
-            href={PORTFOLIO_URL}
-            className="font-mono text-[10px] tracking-[0.2em] text-muted uppercase transition-colors hover:text-black"
-          >
-            The work &rarr;
-          </a>
         </div>
       </Container>
     </main>

@@ -132,6 +132,7 @@ export type PersonalProfileView = {
   location: string;
   email: string;
   portrait: PersonalImageView | null;
+  hero: PersonalImageView | null;
 };
 
 export type PersonalParagraphView = {

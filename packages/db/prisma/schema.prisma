@@ -95,6 +95,7 @@ model Asset {
   productBackgrounds      DephiliaProduct[] @relation("ProductBackground")
   certificationLogos      Certification[]   @relation("CertificationLogo")
   personalPortraits       PersonalProfile[] @relation("PersonalPortrait")
+  personalHeroBackgrounds PersonalProfile[] @relation("PersonalHeroBackground")
   personalPlaceImages     PersonalPlace[]   @relation("PersonalPlaceImage")
   personalGalleryImages   PersonalGalleryItem[] @relation("PersonalGalleryImage")
   personalWishlistImages  PersonalWishlistItem[] @relation("PersonalWishlistImage")
@@ -388,10 +389,12 @@ model PersonalProfile {
   location        String @default("")
   email           String @default("")
   portraitAssetId String? @map("portrait_asset_id")
+  heroAssetId     String? @map("hero_asset_id")
 
   updatedAt DateTime @updatedAt @map("updated_at")
 
   portraitAsset Asset? @relation("PersonalPortrait", fields: [portraitAssetId], references: [id], onDelete: SetNull)
+  heroAsset     Asset? @relation("PersonalHeroBackground", fields: [heroAssetId], references: [id], onDelete: SetNull)
 
   @@map("tb_personal_profile")
 }
