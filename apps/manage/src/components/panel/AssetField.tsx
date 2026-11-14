@@ -4,6 +4,8 @@ import Image from "next/image";
 import { useCallback, useEffect, useId, useRef, useState, type DragEvent } from "react";
 import { ImageUp, Music } from "lucide-react";
 import { Button, Field } from "@repo/ui";
+import { discardUpload } from "@/lib/actions/upload";
+import { uploadFile, type PendingUpload } from "@/lib/upload-client";
 
 export type AssetInfo = {
   id: string;
@@ -15,6 +17,10 @@ export type AssetInfo = {
 
 const ACCEPT =
   "image/png,image/jpeg,image/webp,image/avif,image/svg+xml,image/gif";
+
+/** Anything above this cannot ride along with a form post, so it is uploaded
+ *  straight from the browser instead. */
+const FORM_UPLOAD_LIMIT = 4_000_000;
 
 export function AssetField({
   label,
@@ -38,6 +44,10 @@ export function AssetField({
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [localUrl, setLocalUrl] = useState<string | null>(null);
+  const [pending, setPending] = useState<PendingUpload | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   const [cleared, setCleared] = useState(false);
   const [dragging, setDragging] = useState(false);
 
@@ -46,25 +56,55 @@ export function AssetField({
     return () => URL.revokeObjectURL(localUrl);
   }, [localUrl]);
 
-  const applyFile = useCallback((next: File) => {
+  /**
+   * Small files ride along with the form, as before. Only files past the
+   * server's request limit take the browser-to-storage route, which keeps
+   * serverless platforms from rejecting the save.
+   */
+  const applyFile = useCallback(async (next: File) => {
     const named =
       next.name && next.name.trim()
         ? next
         : new File([next], `pasted-${Date.now()}.png`, { type: next.type });
 
-    const transfer = new DataTransfer();
-    transfer.items.add(named);
-    if (inputRef.current) inputRef.current.files = transfer.files;
-
     setFile(named);
     setLocalUrl(URL.createObjectURL(named));
+    setPending(null);
     setCleared(false);
+    setError(null);
+    setProgress(0);
+
+    if (named.size <= FORM_UPLOAD_LIMIT) {
+      // Hand the bytes back to the input so the save request carries them.
+      const transfer = new DataTransfer();
+      transfer.items.add(named);
+      if (inputRef.current) inputRef.current.files = transfer.files;
+      return;
+    }
+
+    // Clear the picker: the raw bytes must never be posted with the form.
+    if (inputRef.current) inputRef.current.value = "";
+    setUploading(true);
+
+    try {
+      setPending(await uploadFile(named, setProgress));
+    } catch (uploadError) {
+      setError(
+        uploadError instanceof Error ? uploadError.message : "Upload failed.",
+      );
+      setFile(null);
+      setLocalUrl(null);
+    } finally {
+      setUploading(false);
+    }
   }, []);
 
   useEffect(() => {
     if (!allowPaste || isAudio) return;
 
     const onPaste = (event: ClipboardEvent) => {
+      if (uploading) return;
+
       const items = event.clipboardData?.items;
       if (!items) return;
 
@@ -75,32 +115,33 @@ export function AssetField({
       if (!pasted) return;
 
       event.preventDefault();
-      applyFile(pasted);
+      void applyFile(pasted);
     };
 
     window.addEventListener("paste", onPaste);
     return () => window.removeEventListener("paste", onPaste);
-  }, [allowPaste, isAudio, applyFile]);
+  }, [allowPaste, isAudio, applyFile, uploading]);
 
   function pick(event: React.ChangeEvent<HTMLInputElement>) {
     const next = event.target.files?.[0] ?? null;
-    if (!next) {
-      setFile(null);
-      setLocalUrl(null);
-      return;
-    }
-    applyFile(next);
+    if (!next) return;
+    void applyFile(next);
   }
 
   function remove() {
+    if (pending) void discardUpload(pending.fileId);
     setFile(null);
+    setPending(null);
     setLocalUrl(null);
+    setProgress(0);
+    setError(null);
     setCleared(true);
     if (inputRef.current) inputRef.current.value = "";
   }
 
   const shownUrl = localUrl ?? (cleared ? null : (asset?.url ?? null));
-  const title = file?.name ?? (cleared ? null : asset?.originalName);
+  const title =
+    file?.name ?? pending?.originalName ?? (cleared ? null : asset?.originalName);
 
   /** The same list the file picker uses, so a dropped file cannot slip past it. */
   function accepts(next: File) {
@@ -117,9 +158,11 @@ export function AssetField({
   function drop(event: DragEvent<HTMLDivElement>) {
     event.preventDefault();
     setDragging(false);
+    if (uploading) return;
+
     const dropped = event.dataTransfer.files?.[0];
     if (!dropped || !accepts(dropped)) return;
-    applyFile(dropped);
+    void applyFile(dropped);
   }
 
   function dragOver(event: DragEvent<HTMLDivElement>) {
@@ -139,8 +182,15 @@ export function AssetField({
       <input
         type="hidden"
         name={name}
-        value={cleared || file ? "" : (asset?.id ?? "")}
+        value={cleared || file || pending ? "" : (asset?.id ?? "")}
       />
+      {pending ? (
+        <input
+          type="hidden"
+          name={`${name}Pending`}
+          value={JSON.stringify(pending)}
+        />
+      ) : null}
       <input
         ref={inputRef}
         id={inputId}
@@ -148,6 +198,7 @@ export function AssetField({
         name={`${name}File`}
         accept={accept ?? ACCEPT}
         onChange={pick}
+        disabled={uploading}
         className="sr-only"
       />
 
@@ -188,15 +239,27 @@ export function AssetField({
                 {title}
               </span>
               <span className="mt-0.5 block truncate font-mono text-[10px] tracking-[0.08em] text-muted uppercase">
-                {file
-                  ? formatSize(file.size)
-                  : asset?.width && asset.height
-                    ? `${asset.width}×${asset.height}`
-                    : isAudio
-                      ? "Audio"
-                      : "Image"}
+                {uploading
+                  ? `Uploading ${progress}%`
+                  : pending
+                    ? formatSize(pending.size)
+                    : file
+                      ? formatSize(file.size)
+                      : asset?.width && asset.height
+                        ? `${asset.width}×${asset.height}`
+                        : isAudio
+                          ? "Audio"
+                          : "Image"}
               </span>
-              {file ? (
+              {uploading ? (
+                <span className="mt-1 block text-[11px] text-brand">
+                  Sending the file straight to storage…
+                </span>
+              ) : pending ? (
+                <span className="mt-1 block text-[11px] text-brand">
+                  Uploaded · saved when you submit
+                </span>
+              ) : file ? (
                 <span className="mt-1 block text-[11px] text-brand">
                   New upload · replaced when you save
                 </span>
@@ -206,7 +269,9 @@ export function AssetField({
             <span className="col-start-2 flex items-center gap-1.5">
               <label
                 htmlFor={inputId}
-                className="inline-flex h-8 cursor-pointer items-center justify-center rounded-full border border-line bg-surface px-3 text-xs font-medium text-ink transition-colors hover:border-brand/40 hover:bg-sand"
+                aria-disabled={uploading}
+                className={`inline-flex h-8 items-center justify-center rounded-full border border-line bg-surface px-3 text-xs font-medium text-ink transition-colors hover:border-brand/40 hover:bg-sand ${uploading ? "pointer-events-none opacity-50" : "cursor-pointer"
+                  }`}
               >
                 Replace
               </label>
@@ -215,6 +280,7 @@ export function AssetField({
                 variant="ghost"
                 size="sm"
                 onClick={remove}
+                disabled={uploading}
                 className="hover:text-red-600"
               >
                 Remove
@@ -251,6 +317,10 @@ export function AssetField({
             </span>
           </label>
         )}
+
+        {error ? (
+          <p className="mt-2 text-[11px] text-red-600">{error}</p>
+        ) : null}
       </div>
     </Field>
   );

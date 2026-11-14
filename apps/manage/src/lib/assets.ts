@@ -30,6 +30,14 @@ export async function resolveAssetField(
   folder: string,
   scope: "portfolio" | "personal" | "shared" = "portfolio",
 ): Promise<string | null> {
+  // The browser already uploaded the bytes; the row is created here so an
+  // abandoned form never leaves an asset behind.
+  const pending = readPendingUpload(formData.get(`${field}Pending`));
+  if (pending) {
+    const asset = await createAssetFromUpload(pending, folder, scope);
+    return asset.id;
+  }
+
   const file = formData.get(`${field}File`);
 
   if (file instanceof File && file.size > 0) {
@@ -78,13 +86,83 @@ export async function createAssetFromFile(
       url: stored.url,
       width,
       height,
-      kind: mimeType.startsWith("image/")
-        ? "image"
-        : mimeType.startsWith("audio/")
-          ? "audio"
-          : mimeType.startsWith("video/")
-            ? "video"
-            : "document",
+      kind: kindFor(mimeType),
+      scope,
+      folder,
+    },
+  });
+}
+
+function kindFor(mimeType: string) {
+  if (mimeType.startsWith("image/")) return "image";
+  if (mimeType.startsWith("audio/")) return "audio";
+  if (mimeType.startsWith("video/")) return "video";
+  return "document";
+}
+
+type PendingAssetUpload = {
+  fileId: string;
+  url: string;
+  filename: string;
+  originalName?: string;
+  mimeType: string;
+  size: number;
+  width: number | null;
+  height: number | null;
+};
+
+/** The JSON an uploader leaves behind after the browser finished uploading. */
+function readPendingUpload(
+  raw: FormDataEntryValue | null,
+): PendingAssetUpload | null {
+  if (typeof raw !== "string" || !raw) return null;
+
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+
+    const value = parsed as Partial<PendingAssetUpload>;
+    if (
+      typeof value.fileId !== "string" ||
+      typeof value.url !== "string" ||
+      typeof value.filename !== "string" ||
+      typeof value.mimeType !== "string" ||
+      typeof value.size !== "number"
+    ) {
+      return null;
+    }
+
+    return {
+      fileId: value.fileId,
+      url: value.url,
+      filename: value.filename,
+      originalName: value.originalName,
+      mimeType: value.mimeType,
+      size: value.size,
+      width: typeof value.width === "number" ? value.width : null,
+      height: typeof value.height === "number" ? value.height : null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function createAssetFromUpload(
+  pending: PendingAssetUpload,
+  folder: string,
+  scope: "portfolio" | "personal" | "shared",
+) {
+  return prisma.asset.create({
+    data: {
+      silosFileId: pending.fileId,
+      filename: pending.filename,
+      originalName: pending.originalName || pending.filename,
+      mimeType: pending.mimeType,
+      sizeBytes: pending.size,
+      url: pending.url,
+      width: pending.width,
+      height: pending.height,
+      kind: kindFor(pending.mimeType),
       scope,
       folder,
     },
