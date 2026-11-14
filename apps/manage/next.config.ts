@@ -6,8 +6,10 @@ const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
       // Artwork is uploaded through the same form that saves a section, and
-      // hero plates are routinely larger than the 1 MB default.
-      bodySizeLimit: "16mb",
+      // hero plates are routinely larger than the 1 MB default. Silos itself
+      // takes bigger files through its presigned route, so this is the only
+      // ceiling left.
+      bodySizeLimit: "32mb",
     },
   },
   images: {

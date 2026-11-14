@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { BottomNav } from "./BottomNav";
+import { MusicToggle } from "./MusicToggle";
 
 /**
  * The bottom bar, holding the section nav.
@@ -17,7 +18,7 @@ import { BottomNav } from "./BottomNav";
  * The section nav is kept off the project detail pages, where the anchors it
  * targets do not exist.
  */
-export function BottomBar() {
+export function BottomBar({ musicUrl }: { musicUrl: string | null }) {
   const pathname = usePathname();
   const withNav = pathname === "/";
 
@@ -30,6 +31,7 @@ export function BottomBar() {
     >
       <div className="flex items-center gap-3">
         {withNav ? <BottomNav /> : null}
+        {musicUrl ? <MusicToggle src={musicUrl} /> : null}
       </div>
     </motion.div>
   );

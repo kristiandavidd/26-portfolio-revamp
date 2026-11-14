@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { ImageUp } from "lucide-react";
+import { ImageUp, Music } from "lucide-react";
 import { Button, Field } from "@repo/ui";
 
 export type AssetInfo = {
@@ -21,15 +21,19 @@ export function AssetField({
   name,
   asset,
   hint,
+  accept,
   allowPaste = false,
 }: {
   label: string;
   name: string;
   asset: AssetInfo | null;
   hint?: string;
+  /** Override the file types, e.g. an audio accept list for music. */
+  accept?: string;
   /** Accept an image straight from the clipboard (Ctrl/Cmd+V). */
   allowPaste?: boolean;
 }) {
+  const isAudio = (accept ?? "").startsWith("audio");
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -57,7 +61,7 @@ export function AssetField({
   }, []);
 
   useEffect(() => {
-    if (!allowPaste) return;
+    if (!allowPaste || isAudio) return;
 
     const onPaste = (event: ClipboardEvent) => {
       const items = event.clipboardData?.items;
@@ -75,7 +79,7 @@ export function AssetField({
 
     window.addEventListener("paste", onPaste);
     return () => window.removeEventListener("paste", onPaste);
-  }, [allowPaste, applyFile]);
+  }, [allowPaste, isAudio, applyFile]);
 
   function pick(event: React.ChangeEvent<HTMLInputElement>) {
     const next = event.target.files?.[0] ?? null;
@@ -109,15 +113,17 @@ export function AssetField({
         id={inputId}
         type="file"
         name={`${name}File`}
-        accept={ACCEPT}
+        accept={accept ?? ACCEPT}
         onChange={pick}
         className="sr-only"
       />
 
       {shownUrl ? (
         <div className="grid grid-cols-[auto_1fr] items-start gap-3 rounded-xl border border-line bg-surface p-2.5">
-          <span className="relative row-span-2 h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-sand">
-            {localUrl ? (
+          <span className="relative row-span-2 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-sand">
+            {isAudio ? (
+              <Music size={22} aria-hidden className="text-brand" />
+            ) : localUrl ? (
               <span
                 aria-hidden
                 className="absolute inset-0 bg-contain bg-center bg-no-repeat"
@@ -144,7 +150,9 @@ export function AssetField({
                 ? formatSize(file.size)
                 : asset?.width && asset.height
                   ? `${asset.width}×${asset.height}`
-                  : "Image"}
+                  : isAudio
+                    ? "Audio"
+                    : "Image"}
             </span>
             {file ? (
               <span className="mt-1 block text-[11px] text-brand">
@@ -171,7 +179,7 @@ export function AssetField({
             </Button>
           </span>
 
-          {allowPaste ? (
+          {allowPaste && !isAudio ? (
             <span className="col-span-2 block text-[11px] text-muted">
               Paste an image with Ctrl+V to replace it.
             </span>
@@ -183,15 +191,21 @@ export function AssetField({
           className="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-dashed border-line bg-surface px-4 py-4 text-left transition-colors hover:border-brand/40 hover:bg-brand/[0.03]"
         >
           <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand/10 text-brand">
-            <ImageUp size={17} aria-hidden />
+            {isAudio ? (
+              <Music size={17} aria-hidden />
+            ) : (
+              <ImageUp size={17} aria-hidden />
+            )}
           </span>
           <span>
             <span className="block text-sm font-medium text-ink">
-              Upload an image
+              {isAudio ? "Upload an audio file" : "Upload an image"}
             </span>
             <span className="block text-xs text-muted">
-              PNG, JPG, WebP, AVIF or SVG. Uploaded to Silos.
-              {allowPaste ? " You can also paste with Ctrl+V." : ""}
+              {isAudio
+                ? "MP3, WAV or OGG. Uploaded to Silos."
+                : "PNG, JPG, WebP, AVIF or SVG. Uploaded to Silos."}
+              {allowPaste && !isAudio ? " You can also paste with Ctrl+V." : ""}
             </span>
           </span>
         </label>

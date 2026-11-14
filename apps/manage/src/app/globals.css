@@ -15,7 +15,7 @@
 
   --font-sans: var(--font-jakarta);
   --font-mono: var(--font-jetbrains-mono);
-  --font-display: var(--font-sedgwick-ave-display);
+  --font-display: var(--font-axion);
 }
 
 @layer base {
@@ -24,6 +24,14 @@
   body {
     background-color: var(--color-paper);
     color: var(--color-ink);
+  }
+
+  /* Axion runs wider than the face it replaced, so an overlong word breaks
+     inside its heading rather than pushing the panel sideways. */
+  h1,
+  h2,
+  h3 {
+    overflow-wrap: break-word;
   }
 
   ::selection {

@@ -7,6 +7,7 @@ import {
   type CommunityRoleView,
   type DephiliaProductView,
   type ExperienceView,
+  type GeneralSettingsView,
   type PersonalContent,
   type PersonalImageView,
   type ProjectView,
@@ -312,6 +313,28 @@ export async function getPersonalContent(): Promise<PersonalContent> {
       done: row.done,
       image: toPersonalImage(row.imageAsset),
     })),
+  };
+}
+
+/** One row behind the panel's General settings. */
+export async function getGeneralSettings(): Promise<GeneralSettingsView> {
+  const settings = await prisma.siteSetting.findUnique({
+    where: { id: 1 },
+    include: {
+      musicAsset: { select: { url: true } },
+      portfolioFaviconAsset: { select: { url: true } },
+      personalFaviconAsset: { select: { url: true } },
+      manageFaviconAsset: { select: { url: true } },
+    },
+  });
+
+  return {
+    music: settings?.musicAsset ? { url: settings.musicAsset.url } : null,
+    favicons: {
+      portfolio: settings?.portfolioFaviconAsset?.url ?? null,
+      personal: settings?.personalFaviconAsset?.url ?? null,
+      manage: settings?.manageFaviconAsset?.url ?? null,
+    },
   };
 }
 

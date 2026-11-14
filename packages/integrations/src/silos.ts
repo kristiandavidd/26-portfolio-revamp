@@ -62,8 +62,40 @@ export function isSilosConfigured() {
   return Boolean(process.env.SILOS_API_URL && process.env.SILOS_API_KEY);
 }
 
-/** Upload one file to the project the API key belongs to. */
+/** The multipart endpoint behind /api/v1/upload refuses anything above 4 MB. */
+const FORM_UPLOAD_LIMIT = 4_000_000;
+
+type DirectUpload = {
+  file_id: string;
+  mode: "single" | "multipart";
+  upload?: {
+    url: string;
+    method?: string;
+    headers?: Record<string, string>;
+  };
+  multipart?: {
+    part_size: number;
+    part_count: number;
+    parts: Array<{ n?: number; part_number?: number; url: string }>;
+  };
+};
+
+/**
+ * Upload one file to the project the API key belongs to.
+ *
+ * Small files go through the classic multipart form. Anything past the form
+ * limit takes the presigned path instead, so the bytes go straight to storage
+ * and the size limit no longer applies.
+ */
 export async function uploadToSilos(
+  file: Blob,
+  options: { filename: string; folderId?: string | null },
+): Promise<SilosFile> {
+  if (file.size > FORM_UPLOAD_LIMIT) return uploadDirect(file, options);
+  return uploadForm(file, options);
+}
+
+async function uploadForm(
   file: Blob,
   options: { filename: string; folderId?: string | null },
 ): Promise<SilosFile> {
@@ -93,6 +125,61 @@ export async function uploadToSilos(
   }
 
   return payload.data;
+}
+
+/** Presigned upload: initiate, PUT the bytes, then let Silos verify the object. */
+async function uploadDirect(
+  file: Blob,
+  options: { filename: string; folderId?: string | null },
+): Promise<SilosFile> {
+  const buffer = new Uint8Array(await file.arrayBuffer());
+  const started = await silosRequest<DirectUpload>("/api/v1/uploads", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      filename: options.filename,
+      mime_type: file.type || "application/octet-stream",
+      size: buffer.byteLength,
+      ...(options.folderId ? { folder_id: options.folderId } : {}),
+    }),
+  });
+
+  let parts: Array<{ n: number; etag: string }> | undefined;
+
+  if (started.mode === "multipart" && started.multipart) {
+    const { part_size, parts: targets } = started.multipart;
+    parts = [];
+
+    for (const [index, target] of targets.entries()) {
+      const n = target.n ?? target.part_number ?? index + 1;
+      const slice = buffer.slice((n - 1) * part_size, n * part_size);
+      const response = await fetch(target.url, { method: "PUT", body: slice });
+      if (!response.ok) {
+        throw new Error(`Silos part ${n} failed (${response.status}).`);
+      }
+      parts.push({ n, etag: response.headers.get("etag") ?? "" });
+    }
+  } else if (started.upload) {
+    const response = await fetch(started.upload.url, {
+      method: started.upload.method ?? "PUT",
+      headers: started.upload.headers,
+      body: buffer,
+    });
+    if (!response.ok) {
+      throw new Error(`Silos upload failed (${response.status}).`);
+    }
+  } else {
+    throw new Error("Silos did not return an upload target.");
+  }
+
+  return silosRequest<SilosFile>(
+    `/api/v1/uploads/${encodeURIComponent(started.file_id)}/complete`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(parts ? { parts } : {}),
+    },
+  );
 }
 
 export async function deleteFromSilos(fileId: string): Promise<void> {

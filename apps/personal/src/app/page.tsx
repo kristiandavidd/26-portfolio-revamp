@@ -84,7 +84,7 @@ export default async function PersonalHome() {
               </span>
             ) : null}
 
-            <h1 className="font-display mt-6 text-[clamp(2.75rem,8vw,6rem)] leading-[0.92] text-balance text-white">
+            <h1 className="font-display mt-6 text-[clamp(2.25rem,7vw,5rem)] leading-[0.92] text-balance text-white">
               {profile.name || "Hello."}
             </h1>
 

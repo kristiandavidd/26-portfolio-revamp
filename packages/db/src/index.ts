@@ -3,4 +3,5 @@ export * from "./types";
 export {
   getSiteContent,
   getPersonalContent,
+  getGeneralSettings,
 } from "./queries";

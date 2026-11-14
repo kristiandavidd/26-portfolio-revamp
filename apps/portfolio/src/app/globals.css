@@ -19,10 +19,11 @@
   /* Typography */
   --font-sans: var(--font-jakarta);
   --font-mono: var(--font-jetbrains-mono);
-  --font-display: var(--font-sedgwick-ave-display);
+  --font-display: var(--font-axion);
 }
 
 @layer base {
+
   html,
   body {
     background-color: var(--color-white);
@@ -31,6 +32,14 @@
 
   body {
     overflow-x: clip;
+  }
+
+  /* Axion runs wider than the face it replaced, so an overlong word breaks
+     inside its heading rather than pushing the page sideways. */
+  h1,
+  h2,
+  h3 {
+    overflow-wrap: break-word;
   }
 
   ::selection {
@@ -45,6 +54,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -56,6 +66,7 @@
   from {
     transform: translate3d(0, 0, 0);
   }
+
   to {
     transform: translate3d(-100%, 0, 0);
   }
@@ -65,6 +76,7 @@
   from {
     transform: translate3d(-100%, 0, 0);
   }
+
   to {
     transform: translate3d(0, 0, 0);
   }
@@ -84,6 +96,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+
     .page-in,
     .marquee-left,
     .marquee-right {

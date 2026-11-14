@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
-import {
-  JetBrains_Mono,
-  Plus_Jakarta_Sans,
-  Sedgwick_Ave_Display,
-} from "next/font/google";
+import { JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import { PersonalNav } from "@/components/layout/PersonalNav";
 import { SmoothScrollProvider } from "@/components/layout/SmoothScrollProvider";
-import { getContent } from "@/lib/content";
+import { getContent, getSettings } from "@/lib/content";
 import { PERSON_ID, PERSONAL_URL, PORTFOLIO_URL } from "@/lib/seo";
 import "./globals.css";
 
@@ -20,14 +17,16 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
-const sedgwickAveDisplay = Sedgwick_Ave_Display({
-  variable: "--font-sedgwick-ave-display",
-  subsets: ["latin"],
+const axion = localFont({
+  src: "./fonts/font_axion.ttf",
+  variable: "--font-axion",
   weight: "400",
+  display: "swap",
 });
 
 export async function generateMetadata(): Promise<Metadata> {
   const { profile } = await getContent();
+  const general = await getSettings();
   const portrait = profile.portrait?.url;
   const description =
     "Stories, places, photographs and things still to do — the other side of Kristian David.";
@@ -51,6 +50,7 @@ export async function generateMetadata(): Promise<Metadata> {
     ],
     authors: [{ name: profile.name, url: PORTFOLIO_URL }],
     creator: profile.name,
+    icons: { icon: general.favicons.personal ?? "/favicon.ico" },
     alternates: {
       canonical: "/",
     },
@@ -93,6 +93,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const { profile } = await getContent();
+  const general = await getSettings();
 
   // The person entity is declared in full on the portfolio; this graph points at
   // it so the two sites reinforce one identity instead of splitting it.
@@ -135,7 +136,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${jakarta.variable} ${jetbrainsMono.variable} ${sedgwickAveDisplay.variable} h-full antialiased`}
+      className={`${jakarta.variable} ${jetbrainsMono.variable} ${axion.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-paper text-ink">
         <script
@@ -145,7 +146,7 @@ export default async function RootLayout({
           }}
         />
         <SmoothScrollProvider>{children}</SmoothScrollProvider>
-        <PersonalNav />
+        <PersonalNav musicUrl={general.music?.url ?? null} />
       </body>
     </html>
   );

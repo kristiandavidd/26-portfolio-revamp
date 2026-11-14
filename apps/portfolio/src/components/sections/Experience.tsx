@@ -92,7 +92,7 @@ function Panel({
             </span>
           </div>
 
-          <h3 className="mt-3 text-3xl text-balance text-white sm:text-4xl lg:text-5xl font-display tracking-widest uppercase">
+          <h3 className="mt-3 text-2xl text-balance text-white sm:text-4xl lg:text-5xl font-display tracking-widest uppercase">
             {item.company}
           </h3>
           <p className="mt-2 text-base text-orange sm:text-lg">{item.role}</p>

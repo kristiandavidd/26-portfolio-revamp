@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
-import {
-  JetBrains_Mono,
-  Plus_Jakarta_Sans,
-  Sedgwick_Ave_Display,
-} from "next/font/google";
+import { JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import { BottomBar } from "@/components/layout/BottomBar";
 import { SmoothScrollProvider } from "@/components/layout/SmoothScrollProvider";
-import { getContent } from "@/lib/content";
+import { getContent, getSettings } from "@/lib/content";
 import { EXPERTISE, JOB_TITLE, SITE_URL } from "@/lib/seo";
 import "./globals.css";
 
@@ -20,10 +17,11 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
-const sedgwickAveDisplay = Sedgwick_Ave_Display({
-  variable: "--font-sedgwick-ave-display",
-  subsets: ["latin"],
+const axion = localFont({
+  src: "./fonts/font_axion.ttf",
+  variable: "--font-axion",
   weight: "400",
+  display: "swap",
 });
 
 // Every page reads content from the database, so the segment is rendered per
@@ -32,6 +30,7 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { profile, settings } = await getContent();
+  const general = await getSettings();
   const role = profile.role.trim() || JOB_TITLE;
   const siteUrl = settings.siteUrl || SITE_URL;
   const description =
@@ -71,6 +70,7 @@ export async function generateMetadata(): Promise<Metadata> {
     creator: profile.name,
     publisher: profile.name,
     category: "technology",
+    icons: { icon: general.favicons.portfolio ?? "/favicon.ico" },
     alternates: {
       canonical: "/",
     },
@@ -119,6 +119,7 @@ export default async function RootLayout({
 }) {
   const { profile, settings, experience, projects, dephilia } =
     await getContent();
+  const general = await getSettings();
 
   const role = profile.role.trim() || JOB_TITLE;
   const siteUrl = (settings.siteUrl || SITE_URL).replace(/\/$/, "");
@@ -215,7 +216,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${jakarta.variable} ${jetbrainsMono.variable} ${sedgwickAveDisplay.variable} h-full antialiased`}
+      className={`${jakarta.variable} ${jetbrainsMono.variable} ${axion.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-white text-black">
         <script
@@ -228,7 +229,7 @@ export default async function RootLayout({
           }}
         />
         <SmoothScrollProvider>{children}</SmoothScrollProvider>
-        <BottomBar />
+        <BottomBar musicUrl={general.music?.url ?? null} />
       </body>
     </html>
   );

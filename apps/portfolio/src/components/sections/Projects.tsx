@@ -213,7 +213,7 @@ function ProjectScene({ project, index }: { project: Project; index: number }) {
                 </p>
               ) : null}
               <h3
-                className={`font-display text-[2.5rem] leading-[0.9] text-white uppercase sm:text-[3.5rem] lg:text-[4.5rem] ${
+                className={`font-display text-[2rem] leading-[0.9] text-white uppercase sm:text-[3rem] lg:text-[3.75rem] ${
                   project.company ? "mt-4" : ""
                 }`}
               >

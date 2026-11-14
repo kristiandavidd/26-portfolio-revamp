@@ -187,6 +187,15 @@ export type PersonalContent = {
   wishlist: PersonalWishlistView[];
 };
 
+export type GeneralSettingsView = {
+  music: { url: string } | null;
+  favicons: {
+    portfolio: string | null;
+    personal: string | null;
+    manage: string | null;
+  };
+};
+
 export const BRAND_ACCENT = "#ff5c1a";
 
 export const FALLBACK_CONTENT: SiteContent = {

@@ -18,7 +18,7 @@ export function Hero({ profile }: { profile: ProfileView }) {
         }}
       />
 
-      <h1 className="font-display relative z-20 shrink-0 px-4 text-center text-[clamp(1.5rem,9vw,5.25rem)] leading-[0.95] whitespace-nowrap sm:px-6">
+      <h1 className="font-display relative z-20 w-full shrink-0 px-4 text-center text-[clamp(1.25rem,6vw,4.75rem)] leading-[0.95] text-balance sm:px-6">
         <span className="block">{profile.heroLine1}</span>
         <span className="block text-orange">{profile.heroLine2}</span>
       </h1>

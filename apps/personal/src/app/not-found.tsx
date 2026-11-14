@@ -18,7 +18,7 @@ export default function NotFound() {
         <p className="font-mono text-[10px] tracking-[0.28em] text-violet uppercase">
           Error 404
         </p>
-        <h1 className="font-display mt-5 max-w-3xl text-[clamp(2.75rem,9vw,6.5rem)] leading-[0.92] text-balance">
+        <h1 className="font-display mt-5 max-w-3xl text-[clamp(2rem,8vw,5.5rem)] leading-[0.92] text-balance">
           This page wandered off.
         </h1>
         <p className="mt-6 max-w-md text-sm leading-relaxed text-muted sm:text-base">

@@ -28,11 +28,12 @@ export async function resolveAssetField(
   formData: FormData,
   field: string,
   folder: string,
+  scope: "portfolio" | "personal" | "shared" = "portfolio",
 ): Promise<string | null> {
   const file = formData.get(`${field}File`);
 
   if (file instanceof File && file.size > 0) {
-    const asset = await createAssetFromFile(file, folder);
+    const asset = await createAssetFromFile(file, folder, scope);
     return asset.id;
   }
 
@@ -41,7 +42,11 @@ export async function resolveAssetField(
   return id || null;
 }
 
-export async function createAssetFromFile(file: File, folder: string) {
+export async function createAssetFromFile(
+  file: File,
+  folder: string,
+  scope: "portfolio" | "personal" | "shared" = "portfolio",
+) {
   const buffer = Buffer.from(await file.arrayBuffer());
 
   let width: number | null = null;
@@ -61,20 +66,26 @@ export async function createAssetFromFile(file: File, folder: string) {
     { filename: file.name },
   );
 
+  const mimeType = stored.mime_type || file.type || "application/octet-stream";
+
   return prisma.asset.create({
     data: {
       silosFileId: stored.id,
       filename: stored.filename,
       originalName: file.name,
-      mimeType: stored.mime_type || file.type || "application/octet-stream",
+      mimeType,
       sizeBytes: stored.size ?? file.size,
       url: stored.url,
       width,
       height,
-      kind: (stored.mime_type || file.type).startsWith("image/")
+      kind: mimeType.startsWith("image/")
         ? "image"
-        : "document",
-      scope: "portfolio",
+        : mimeType.startsWith("audio/")
+          ? "audio"
+          : mimeType.startsWith("video/")
+            ? "video"
+            : "document",
+      scope,
       folder,
     },
   });
@@ -137,6 +148,7 @@ async function isAssetReferenced(assetId: string) {
     personalPlaces,
     personalGallery,
     personalWishlist,
+    settings,
   ] = await prisma.$transaction([
     prisma.profile.count({
       where: {
@@ -174,19 +186,30 @@ async function isAssetReferenced(assetId: string) {
     prisma.personalPlace.count({ where: { imageAssetId: assetId } }),
     prisma.personalGalleryItem.count({ where: { imageAssetId: assetId } }),
     prisma.personalWishlistItem.count({ where: { imageAssetId: assetId } }),
+    prisma.siteSetting.count({
+      where: {
+        OR: [
+          { musicAssetId: assetId },
+          { portfolioFaviconAssetId: assetId },
+          { personalFaviconAssetId: assetId },
+          { manageFaviconAssetId: assetId },
+        ],
+      },
+    }),
   ]);
 
   return (
     profiles +
-      patterns +
-      companies +
-      projects +
-      products +
-      certifications +
-      personalProfiles +
-      personalPlaces +
-      personalGallery +
-      personalWishlist >
+    patterns +
+    companies +
+    projects +
+    products +
+    certifications +
+    personalProfiles +
+    personalPlaces +
+    personalGallery +
+    personalWishlist +
+    settings >
     0
   );
 }

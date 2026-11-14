@@ -22,6 +22,7 @@ import {
   MapPin,
   Menu,
   Package,
+  Settings,
   Sparkles,
   User,
   X,
@@ -75,9 +76,12 @@ const GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: "Activity",
+    label: "General",
     icon: Activity,
-    items: [{ href: "/messages", label: "Messages", icon: Mail }],
+    items: [
+      { href: "/settings", label: "Settings", icon: Settings },
+      { href: "/messages", label: "Messages", icon: Mail },
+    ],
   },
 ];
 

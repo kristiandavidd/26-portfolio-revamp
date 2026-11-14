@@ -70,7 +70,7 @@ model Asset {
   width        Int?
   height       Int?
   alt          String?
-  /// image | video | document | icon
+  /// image | video | audio | document | icon
   kind         String   @default("image")
   /// Which app the asset belongs to: portfolio | personal | shared
   scope        String   @default("portfolio")
@@ -99,6 +99,10 @@ model Asset {
   personalPlaceImages     PersonalPlace[]   @relation("PersonalPlaceImage")
   personalGalleryImages   PersonalGalleryItem[] @relation("PersonalGalleryImage")
   personalWishlistImages  PersonalWishlistItem[] @relation("PersonalWishlistImage")
+  settingMusic            SiteSetting[]     @relation("SettingMusic")
+  portfolioFavicons       SiteSetting[]     @relation("PortfolioFavicon")
+  personalFavicons        SiteSetting[]     @relation("PersonalFavicon")
+  manageFavicons          SiteSetting[]     @relation("ManageFavicon")
 
   @@index([scope, status])
   @@map("tb_asset")
@@ -514,4 +518,23 @@ model PersonalWishlistItem {
 
   @@index([status, sortOrder])
   @@map("tb_personal_wishlist_item")
+}
+
+/// Singleton row behind the panel's General settings: the background music and
+/// the favicon each app uses.
+model SiteSetting {
+  id                      Int     @id @default(1)
+  musicAssetId            String? @map("music_asset_id")
+  portfolioFaviconAssetId String? @map("portfolio_favicon_asset_id")
+  personalFaviconAssetId  String? @map("personal_favicon_asset_id")
+  manageFaviconAssetId    String? @map("manage_favicon_asset_id")
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  musicAsset            Asset? @relation("SettingMusic", fields: [musicAssetId], references: [id], onDelete: SetNull)
+  portfolioFaviconAsset Asset? @relation("PortfolioFavicon", fields: [portfolioFaviconAssetId], references: [id], onDelete: SetNull)
+  personalFaviconAsset  Asset? @relation("PersonalFavicon", fields: [personalFaviconAssetId], references: [id], onDelete: SetNull)
+  manageFaviconAsset    Asset? @relation("ManageFavicon", fields: [manageFaviconAssetId], references: [id], onDelete: SetNull)
+
+  @@map("tb_site_setting")
 }

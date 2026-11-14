@@ -16,7 +16,7 @@ export function PageIntro({
       <p className="font-mono text-[10px] tracking-[0.28em] text-violet uppercase">
         {eyebrow}
       </p>
-      <h1 className="font-display mt-4 text-[clamp(2.75rem,7vw,5rem)] leading-[0.95] text-balance">
+      <h1 className="font-display mt-4 text-[clamp(2rem,6.5vw,4.5rem)] leading-[0.95] text-balance">
         {title}
       </h1>
       {description ? (

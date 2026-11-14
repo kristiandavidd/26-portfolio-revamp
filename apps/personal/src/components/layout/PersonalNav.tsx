@@ -11,6 +11,7 @@ import {
   MapPin,
   type LucideIcon,
 } from "lucide-react";
+import { MusicToggle } from "./MusicToggle";
 
 const LINKS: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/", label: "Home", icon: Home },
@@ -24,7 +25,7 @@ const LINKS: { href: string; label: string; icon: LucideIcon }[] = [
  * The same dock as the professional site, with the personal destinations.
  * Routes rather than anchors, so the active state comes from the pathname.
  */
-export function PersonalNav() {
+export function PersonalNav({ musicUrl }: { musicUrl: string | null }) {
   const pathname = usePathname();
 
   return (
@@ -32,7 +33,7 @@ export function PersonalNav() {
       initial={{ y: 40, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed inset-x-0 bottom-5 z-50 flex justify-center px-4"
+      className="fixed inset-x-0 bottom-5 z-50 flex items-center justify-center gap-3 px-4"
     >
       <nav
         aria-label="Personal navigation"
@@ -70,6 +71,8 @@ export function PersonalNav() {
           );
         })}
       </nav>
+
+      {musicUrl ? <MusicToggle src={musicUrl} autoPlay /> : null}
     </motion.div>
   );
 }
