@@ -4,6 +4,7 @@ import { Field, Input, PageHeader } from "@repo/ui";
 import { SubmitButton } from "@/components/panel/SubmitButton";
 import { DeleteForm } from "@/components/panel/FormBits";
 import { Modal } from "@/components/panel/Modal";
+import { SortableBody } from "@/components/panel/Sortable";
 import { EmptyRow, TableShell, Td, Th } from "@/components/panel/Table";
 import { Reorder, StatusToggle } from "@/components/panel/RowActions";
 import { deleteChapter, saveChapter } from "@/lib/actions/personal";
@@ -80,7 +81,12 @@ export default async function PersonalStoryPage() {
             <Th className="pr-5 text-right">Actions</Th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-line/70">
+        <SortableBody
+          entity="chapter"
+          ids={chapters.map((chapter) => chapter.id)}
+          path={PATH}
+          className="divide-y divide-line/70"
+        >
           {chapters.length === 0 ? (
             <EmptyRow>No chapters yet.</EmptyRow>
           ) : null}
@@ -132,7 +138,7 @@ export default async function PersonalStoryPage() {
               </Td>
             </tr>
           ))}
-        </tbody>
+        </SortableBody>
       </TableShell>
     </div>
   );

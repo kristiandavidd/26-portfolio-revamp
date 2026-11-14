@@ -6,6 +6,7 @@ import { AssetField, type AssetInfo } from "@/components/panel/AssetField";
 import { DeleteForm } from "@/components/panel/FormBits";
 import { Modal } from "@/components/panel/Modal";
 import { SelectMenu } from "@/components/panel/SelectMenu";
+import { SortableBody } from "@/components/panel/Sortable";
 import { EmptyRow, TableShell, Td, Th } from "@/components/panel/Table";
 import { Reorder, StatusToggle } from "@/components/panel/RowActions";
 import { getAssetMap } from "@/lib/assets";
@@ -256,7 +257,12 @@ export default async function ProjectsPage() {
             <Th className="pr-5 text-right">Actions</Th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-line/70">
+        <SortableBody
+          entity="project"
+          ids={projects.map((project) => project.id)}
+          path={PATH}
+          className="divide-y divide-line/70"
+        >
           {projects.length === 0 ? (
             <EmptyRow>No projects yet.</EmptyRow>
           ) : null}
@@ -343,7 +349,7 @@ export default async function ProjectsPage() {
               </tr>
             );
           })}
-        </tbody>
+        </SortableBody>
       </TableShell>
     </div>
   );

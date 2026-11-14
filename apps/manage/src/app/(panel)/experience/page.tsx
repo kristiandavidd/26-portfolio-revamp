@@ -5,6 +5,7 @@ import { SubmitButton } from "@/components/panel/SubmitButton";
 import { DeleteForm } from "@/components/panel/FormBits";
 import { Modal } from "@/components/panel/Modal";
 import { SelectMenu } from "@/components/panel/SelectMenu";
+import { SortableBody } from "@/components/panel/Sortable";
 import { Switch } from "@/components/panel/Switch";
 import { EmptyRow, TableShell, Td, Th } from "@/components/panel/Table";
 import { Reorder, StatusToggle } from "@/components/panel/RowActions";
@@ -150,7 +151,12 @@ export default async function ExperiencePage() {
             <Th className="pr-5 text-right">Actions</Th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-line/70">
+        <SortableBody
+          entity="experience"
+          ids={items.map((item) => item.id)}
+          path={PATH}
+          className="divide-y divide-line/70"
+        >
           {items.length === 0 ? (
             <EmptyRow>No experience entries yet.</EmptyRow>
           ) : null}
@@ -228,7 +234,7 @@ export default async function ExperiencePage() {
               </Td>
             </tr>
           ))}
-        </tbody>
+        </SortableBody>
       </TableShell>
     </div>
   );

@@ -212,11 +212,13 @@ export function GalleryWall({ items }: { items: PersonalGalleryView[] }) {
                       className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100"
                     />
                     <span className="pointer-events-none absolute inset-x-0 bottom-0 flex translate-y-2 items-end justify-between gap-3 p-4 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
-                      <span className="min-w-0 flex-1 truncate text-sm font-medium text-white">
-                        {item.title || "Untitled"}
-                      </span>
+                      {item.title ? (
+                        <span className="min-w-0 flex-1 truncate text-sm font-medium text-white">
+                          {item.title}
+                        </span>
+                      ) : null}
                       {item.year ? (
-                        <span className="shrink-0 rounded-full border border-white/25 bg-black/40 px-2.5 py-1 font-mono text-[9px] tracking-[0.16em] text-white uppercase backdrop-blur-sm">
+                        <span className="ml-auto shrink-0 rounded-full border border-white/25 bg-black/40 px-2.5 py-1 font-mono text-[9px] tracking-[0.16em] text-white uppercase backdrop-blur-sm">
                           {item.year}
                         </span>
                       ) : null}
@@ -251,9 +253,11 @@ export function GalleryWall({ items }: { items: PersonalGalleryView[] }) {
                     {current.year}
                   </p>
                 ) : null}
-                <p className="max-w-full truncate text-sm font-medium text-white sm:text-base">
-                  {current.title || "Untitled"}
-                </p>
+                {current.title ? (
+                  <p className="max-w-full truncate text-sm font-medium text-white sm:text-base">
+                    {current.title}
+                  </p>
+                ) : null}
               </div>
 
               <div className="flex flex-1 basis-0 items-center justify-end gap-1.5">

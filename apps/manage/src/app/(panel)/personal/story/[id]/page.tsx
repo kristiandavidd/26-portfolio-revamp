@@ -6,6 +6,7 @@ import { Card, Field, Input, PageHeader, Textarea } from "@repo/ui";
 import { SubmitButton } from "@/components/panel/SubmitButton";
 import { DeleteForm } from "@/components/panel/FormBits";
 import { Modal } from "@/components/panel/Modal";
+import { SortableBody, SortableStack } from "@/components/panel/Sortable";
 import { EmptyRow, TableShell, Td, Th } from "@/components/panel/Table";
 import { Reorder, StatusToggle } from "@/components/panel/RowActions";
 import {
@@ -214,7 +215,13 @@ export default async function ChapterPage({
             <Th className="pr-5 text-right">Actions</Th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-line/70">
+        <SortableBody
+          entity="subchapter"
+          ids={chapter.subchapters.map((subchapter) => subchapter.id)}
+          scope={chapter.id}
+          path={path}
+          className="divide-y divide-line/70"
+        >
           {chapter.subchapters.length === 0 ? (
             <EmptyRow>
               No subchapters yet. Add the first one to start writing.
@@ -231,44 +238,52 @@ export default async function ChapterPage({
               </Td>
               <Td className="align-top">
                 <div className="flex flex-col gap-2">
-                  {subchapter.paragraphs.map((paragraph, pIndex) => (
-                    <div
-                      key={paragraph.id}
-                      className="flex items-start gap-2 rounded-lg border border-line/70 bg-paper/50 px-2.5 py-2"
-                    >
-                      <p className="line-clamp-2 min-w-0 flex-1 text-xs leading-relaxed text-ink/75">
-                        {paragraph.body}
-                      </p>
-                      <div className="flex shrink-0 items-center gap-1">
-                        <Reorder
-                          entity="paragraph"
-                          id={paragraph.id}
-                          scope={subchapter.id}
-                          path={path}
-                          first={pIndex === 0}
-                          last={pIndex === subchapter.paragraphs.length - 1}
-                        />
-                        <Modal
-                          triggerLabel="Edit"
-                          title="Edit paragraph"
-                          description={subchapter.title}
-                          wide
-                        >
-                          <ParagraphForm
-                            chapterId={chapter.id}
-                            subchapterId={subchapter.id}
-                            paragraph={paragraph}
+                  <SortableStack
+                    entity="paragraph"
+                    ids={subchapter.paragraphs.map((paragraph) => paragraph.id)}
+                    scope={subchapter.id}
+                    path={path}
+                    className="flex flex-col gap-2"
+                  >
+                    {subchapter.paragraphs.map((paragraph, pIndex) => (
+                      <div
+                        key={paragraph.id}
+                        className="flex items-start gap-2 rounded-lg border border-line/70 bg-paper/50 px-2.5 py-2"
+                      >
+                        <p className="line-clamp-2 min-w-0 flex-1 text-xs leading-relaxed text-ink/75">
+                          {paragraph.body}
+                        </p>
+                        <div className="flex shrink-0 items-center gap-1">
+                          <Reorder
+                            entity="paragraph"
+                            id={paragraph.id}
+                            scope={subchapter.id}
+                            path={path}
+                            first={pIndex === 0}
+                            last={pIndex === subchapter.paragraphs.length - 1}
                           />
-                        </Modal>
-                        <DeleteForm
-                          action={deleteParagraph}
-                          id={paragraph.id}
-                          path={path}
-                          confirm="Delete this paragraph?"
-                        />
+                          <Modal
+                            triggerLabel="Edit"
+                            title="Edit paragraph"
+                            description={subchapter.title}
+                            wide
+                          >
+                            <ParagraphForm
+                              chapterId={chapter.id}
+                              subchapterId={subchapter.id}
+                              paragraph={paragraph}
+                            />
+                          </Modal>
+                          <DeleteForm
+                            action={deleteParagraph}
+                            id={paragraph.id}
+                            path={path}
+                            confirm="Delete this paragraph?"
+                          />
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </SortableStack>
 
                   <Modal
                     triggerLabel="Add paragraph"
@@ -321,7 +336,7 @@ export default async function ChapterPage({
               </Td>
             </tr>
           ))}
-        </tbody>
+        </SortableBody>
       </TableShell>
     </div>
   );

@@ -6,6 +6,7 @@ import { AssetField, type AssetInfo } from "@/components/panel/AssetField";
 import { DeleteForm } from "@/components/panel/FormBits";
 import { Modal } from "@/components/panel/Modal";
 import { SelectMenu } from "@/components/panel/SelectMenu";
+import { SortableBody } from "@/components/panel/Sortable";
 import { EmptyRow, TableShell, Td, Th } from "@/components/panel/Table";
 import { Reorder, StatusToggle } from "@/components/panel/RowActions";
 import { getAssetMap } from "@/lib/assets";
@@ -247,7 +248,12 @@ export default async function CredentialsPage() {
               <Th className="pr-5 text-right">Actions</Th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-line/70">
+          <SortableBody
+            entity="certification"
+            ids={certifications.map((item) => item.id)}
+            path={PATH}
+            className="divide-y divide-line/70"
+          >
             {certifications.length === 0 ? (
               <EmptyRow>No certifications yet.</EmptyRow>
             ) : null}
@@ -324,7 +330,7 @@ export default async function CredentialsPage() {
                 </tr>
               );
             })}
-          </tbody>
+          </SortableBody>
         </TableShell>
       </section>
 
@@ -348,7 +354,12 @@ export default async function CredentialsPage() {
               <Th className="pr-5 text-right">Actions</Th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-line/70">
+          <SortableBody
+            entity="community"
+            ids={community.map((item) => item.id)}
+            path={PATH}
+            className="divide-y divide-line/70"
+          >
             {community.length === 0 ? (
               <EmptyRow>No community entries yet.</EmptyRow>
             ) : null}
@@ -405,7 +416,7 @@ export default async function CredentialsPage() {
                 </Td>
               </tr>
             ))}
-          </tbody>
+          </SortableBody>
         </TableShell>
       </section>
     </div>

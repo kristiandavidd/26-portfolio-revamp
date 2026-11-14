@@ -5,6 +5,7 @@ import { SubmitButton } from "@/components/panel/SubmitButton";
 import { AssetField, type AssetInfo } from "@/components/panel/AssetField";
 import { DeleteForm } from "@/components/panel/FormBits";
 import { Modal } from "@/components/panel/Modal";
+import { SortableBody } from "@/components/panel/Sortable";
 import { EmptyRow, TableShell, Td, Th } from "@/components/panel/Table";
 import { Reorder, StatusToggle } from "@/components/panel/RowActions";
 import { getAssetMap } from "@/lib/assets";
@@ -151,7 +152,12 @@ export default async function ProductsPage() {
             <Th className="pr-5 text-right">Actions</Th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-line/70">
+        <SortableBody
+          entity="product"
+          ids={products.map((product) => product.id)}
+          path={PATH}
+          className="divide-y divide-line/70"
+        >
           {products.length === 0 ? (
             <EmptyRow>No products yet.</EmptyRow>
           ) : null}
@@ -244,7 +250,7 @@ export default async function ProductsPage() {
               </tr>
             );
           })}
-        </tbody>
+        </SortableBody>
       </TableShell>
     </div>
   );

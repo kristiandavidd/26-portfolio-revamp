@@ -5,6 +5,7 @@ import { SubmitButton } from "@/components/panel/SubmitButton";
 import { AssetField, type AssetInfo } from "@/components/panel/AssetField";
 import { DeleteForm } from "@/components/panel/FormBits";
 import { Modal } from "@/components/panel/Modal";
+import { SortableBody } from "@/components/panel/Sortable";
 import { EmptyRow, TableShell, Td, Th } from "@/components/panel/Table";
 import { Reorder, StatusToggle } from "@/components/panel/RowActions";
 import { getAssetMap } from "@/lib/assets";
@@ -129,7 +130,12 @@ export default async function PersonalGalleryPage() {
             <Th className="pr-5 text-right">Actions</Th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-line/70">
+        <SortableBody
+          entity="gallery"
+          ids={items.map((item) => item.id)}
+          path={PATH}
+          className="divide-y divide-line/70"
+        >
           {items.length === 0 ? (
             <EmptyRow>Nothing in the gallery yet.</EmptyRow>
           ) : null}
@@ -159,7 +165,7 @@ export default async function PersonalGalleryPage() {
                       ) : null}
                     </span>
                     <span className="block max-w-[16rem] truncate font-medium text-ink">
-                      {item.title || "Untitled photo"}
+                      {item.title}
                     </span>
                   </div>
                 </Td>
@@ -189,7 +195,7 @@ export default async function PersonalGalleryPage() {
                     <Modal
                       triggerLabel="Edit"
                       title="Edit photo"
-                      description={item.title || "Untitled photo"}
+                      description={item.title || undefined}
                     >
                       <GalleryForm item={item} assets={assets} />
                     </Modal>
@@ -204,7 +210,7 @@ export default async function PersonalGalleryPage() {
               </tr>
             );
           })}
-        </tbody>
+        </SortableBody>
       </TableShell>
     </div>
   );

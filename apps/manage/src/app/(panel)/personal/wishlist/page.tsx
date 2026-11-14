@@ -4,6 +4,7 @@ import { SubmitButton } from "@/components/panel/SubmitButton";
 import { AssetField, type AssetInfo } from "@/components/panel/AssetField";
 import { DeleteForm } from "@/components/panel/FormBits";
 import { Modal } from "@/components/panel/Modal";
+import { SortableBody } from "@/components/panel/Sortable";
 import { Switch } from "@/components/panel/Switch";
 import { EmptyRow, TableShell, Td, Th } from "@/components/panel/Table";
 import {
@@ -130,7 +131,12 @@ export default async function PersonalWishlistPage() {
             <Th className="pr-5 text-right">Actions</Th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-line/70">
+        <SortableBody
+          entity="wishlist"
+          ids={items.map((item) => item.id)}
+          path={PATH}
+          className="divide-y divide-line/70"
+        >
           {items.length === 0 ? (
             <EmptyRow>The wishlist is empty.</EmptyRow>
           ) : null}
@@ -191,7 +197,7 @@ export default async function PersonalWishlistPage() {
               </Td>
             </tr>
           ))}
-        </tbody>
+        </SortableBody>
       </TableShell>
     </div>
   );

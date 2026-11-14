@@ -23,7 +23,6 @@
 }
 
 @layer base {
-
   html,
   body {
     background-color: var(--color-white);
@@ -54,7 +53,6 @@
   from {
     opacity: 0;
   }
-
   to {
     opacity: 1;
   }
@@ -66,7 +64,6 @@
   from {
     transform: translate3d(0, 0, 0);
   }
-
   to {
     transform: translate3d(-100%, 0, 0);
   }
@@ -76,7 +73,6 @@
   from {
     transform: translate3d(-100%, 0, 0);
   }
-
   to {
     transform: translate3d(0, 0, 0);
   }
@@ -96,7 +92,6 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-
     .page-in,
     .marquee-left,
     .marquee-right {
