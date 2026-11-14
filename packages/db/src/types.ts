@@ -225,7 +225,7 @@ export const FALLBACK_CONTENT: SiteContent = {
     name: "Dephilia Solution",
     legalName: "PT Pelita Solusi Digital",
     role: "Founder & Builder",
-    tagline: "Not Your Ordinary Solution.",
+    tagline: "Solutions Made Different",
     url: "https://dephilia.com",
     description:
       "Every great product starts with an idea. Dephilia helps turn those ideas into digital products that solve real problems, create better experiences, and give businesses room to grow.",
